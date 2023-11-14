@@ -41,28 +41,28 @@ useFxGuiData<B extends object,R extends [bigint, B]>,V extends object>({
   async calculateRateFee(
     tokenA: Asset,
     tokenB: Asset,
-    direction: "forward" | "backward",
+    direction: "ab" | "ba",
     vars: V
   ):Promise<R>,
   async fetchVars(tokenA:Asset, tokenB:Asset):Promise<V>
 }):{
+  breakdown?:B
   tokenAValue:bigint,
   tokenBValue:bigint,
   tokenAId:string,
   tokenBId:string,
   tokenAOptions: Disablable<Asset>[],
   tokenBOptions: Disablable<Asset>[],
-  onTokenAValueChanged:(value:BigInt) => void,
-  onTokenBValueChanged:(value:BigInt) => void,
+  onTokenAAmountChanged:(value:bigint) => void,
+  onTokenBAmountChanged:(value:bigint) => void,
   onTokenAAssetChanged:(asset:string) => void,
   onTokenBAssetChanged:(asset:string) => void,
   onToggleTokens:() => void,
-  loading: boolean,
   error: string,
-  isError,
-  isFetchingVars,
-  isFetchedVars,
-  isSuccess,
-  fees:R["fees"]
+  isError:boolean,
+  isFetchingVars:boolean,
+  isFetchedVars:boolean,
+  isLoading: boolean,
+  isSuccess:boolean,
 };
 ```
