@@ -34,8 +34,9 @@ const assetLib = createAssetLib(assets);
 
 assetLib.getAssetById:(id:string) => Asset
 assetLib.formatAssetAmount(id:string,amount:bigint):string
+assetLib.toDecimal(id:string, amount:bigint):Decimal;
 
-useFxGuiData<R,V>({
+useFxGuiData<B extends object,R extends [bigint, B]>,V extends object>({
   assets,
   async calculateRateFee(
     tokenA: Asset,
@@ -45,17 +46,23 @@ useFxGuiData<R,V>({
   ):Promise<R>,
   async fetchVars(tokenA:Asset, tokenB:Asset):Promise<V>
 }):{
-  tokenAValue:BigInt,
-  tokenBValue:BigInt,
-  tokenASymbol:string,
-  tokenBSymbol:string,
+  tokenAValue:bigint,
+  tokenBValue:bigint,
+  tokenAId:string,
+  tokenBId:string,
   tokenAOptions: Disablable<Asset>[],
   tokenBOptions: Disablable<Asset>[],
   onTokenAValueChanged:(value:BigInt) => void,
   onTokenBValueChanged:(value:BigInt) => void,
   onTokenAAssetChanged:(asset:string) => void,
   onTokenBAssetChanged:(asset:string) => void,
-  loading:boolean,
-  result:R
+  onToggleTokens:() => void,
+  loading: boolean,
+  error: string,
+  isError,
+  isFetchingVars,
+  isFetchedVars,
+  isSuccess,
+  fees:R["fees"]
 };
 ```
