@@ -41,6 +41,8 @@ useFxGuiData<B extends object,R extends [bigint, B]>,V extends object>({
   async calculateRateFee(
     tokenA: Asset,
     tokenB: Asset,
+    tokenAAmount:bigint,
+    tokenBAmount:bigint,
     direction: "ab" | "ba",
     vars: V
   ):Promise<R>,
