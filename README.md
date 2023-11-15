@@ -11,7 +11,7 @@ Bindings are provided for:
 - vue
 
 ```ts
-import { useFxGuiData } from "@blockhackers/fxgui-react";
+import { useFxGui } from "@blockhackers/fxgui-react";
 
 type Token = {
   id: string;
@@ -67,19 +67,6 @@ useFxGui<TBreakdown extends object, TRates extends object>({
   isLoading: boolean,
   isSuccess:boolean,
 };
-```
-
-Some class holds the stores.
-
-You can get all the stores with the react adaptor that accepts the state class and exposes useFxguiData to the rest of React.
-
-```ts
-import { Store } from "@tanstack/store";
-
-const store = new Store(1234n);
-
-store.setSate((old) => old + 2n);
-expect(store.state).toBe(1236n);
 ```
 
 
