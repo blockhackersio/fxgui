@@ -13,7 +13,7 @@ Bindings are provided for:
 ```ts
 import { useFxGuiData } from "@blockhackers/fxgui-react";
 
-type Asset = {
+type Token = {
   id: string;
   decimals: number;
   logo?: string;
@@ -23,7 +23,7 @@ type Disablable<T> = T & {
   disabled?: boolean;
 };
 
-const assets: Asset[] = [
+const assets: Token[] = [
   { id: "ETH", decimals: 8 },
   { id: "BTC", decimals: 8 },
   { id: "USDC", decimals: 2 },
@@ -36,25 +36,25 @@ assetLib.getAssetById:(id:string) => Asset
 assetLib.formatAssetAmount(id:string,amount:bigint):string
 assetLib.toDecimal(id:string, amount:bigint):Decimal;
 
-useFxGuiData<B extends object,R extends [bigint, B]>,V extends object>({
+useFxGui<TBreakdown extends object, TRates extends object>({
   assets,
-  async calculateRateFee(
-    tokenA: Asset,
-    tokenB: Asset,
-    tokenAAmount:bigint,
-    tokenBAmount:bigint,
+  async calculate(
+    tokenA: Token,
+    tokenB: Token,
+    tokenAAmt:bigint,
+    tokenBAmt:bigint,
     direction: "ab" | "ba",
-    vars: V
-  ):Promise<R>,
-  async fetchVars(tokenA:Asset, tokenB:Asset):Promise<V>
+    rates: TRates
+  ):Promise<[bigint, TBreakdown]>,
+  async fetchRates(tokenA:Token, tokenB:Token):Promise<TRates>
 }):{
   breakdown?:B
-  tokenAValue:bigint,
-  tokenBValue:bigint,
+  tokenAAmt:bigint,
+  tokenBAmt:bigint,
   tokenAId:string,
   tokenBId:string,
-  tokenAOptions: Disablable<Asset>[],
-  tokenBOptions: Disablable<Asset>[],
+  tokenAList: Disablable<Token>[],
+  tokenBList: Disablable<Token>[],
   onTokenAAmountChanged:(value:bigint) => void,
   onTokenBAmountChanged:(value:bigint) => void,
   onTokenAAssetChanged:(asset:string) => void,
@@ -101,6 +101,7 @@ classDiagram
     ratesFetcher: RatesFetcher;
     calculator: Calculator;
     toggleTokens() void;
+    direction: Direction; 
   }
 
   class EngineStore {
@@ -141,9 +142,9 @@ classDiagram
     async calculate(a:Token, b:Token, dir:Direction, rates:Rates):[bigint, Breakdown]
   }
 
-  Token <|-- DisablableToken
-  Engine ..> RatesFetcher
-  Engine ..> Calculator
-  ReactAdaptor ..> Engine
-  Engine --> EngineStore
+  Token <|-- DisablableToken : extends
+  Engine ..> RatesFetcher : uses
+  Engine ..> Calculator : uses
+  ReactAdaptor ..> Engine : uses
+  Engine --> EngineStore : has
 ```
