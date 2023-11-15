@@ -10,7 +10,7 @@ Bindings are provided for:
 - Solid
 - vue
 
-```tsx
+```ts
 import { useFxGuiData } from "@blockhackers/fxgui-react";
 
 type Asset = {
@@ -67,4 +67,83 @@ useFxGuiData<B extends object,R extends [bigint, B]>,V extends object>({
   isLoading: boolean,
   isSuccess:boolean,
 };
+```
+
+Some class holds the stores.
+
+You can get all the stores with the react adaptor that accepts the state class and exposes useFxguiData to the rest of React.
+
+```ts
+import { Store } from "@tanstack/store";
+
+const store = new Store(1234n);
+
+store.setSate((old) => old + 2n);
+expect(store.state).toBe(1236n);
+```
+
+
+```mermaid
+classDiagram
+  class Token {
+    id: string;
+    decimals: number;
+    logo?: string;
+  }
+
+  class DisablableToken{
+    disabled?: boolean;
+  }
+
+
+  class Engine {
+    store: EngineStore;
+    ratesFetcher: RatesFetcher;
+    calculator: Calculator;
+    toggleTokens() void;
+  }
+
+  class EngineStore {
+    tokenAAmt: Store< bigint >;
+    tokenAId: Store< string >;
+    tokenAList: Store < DisablableToken[] >;
+    tokenBAmt: Store< bigint >;
+    tokenBId: Store< string >;
+    tokenBList: Store< DisablableToken[] >;
+  }
+
+  class ReactAdaptor {
+    engine: Engine;
+    useStore("tokenAAmt") [bigint, setter];
+    useStore("tokenAId") [string, setter];
+    useStore("tokenAList") [DisablableToken[], setter];
+    useStore("tokenBAmt") [bigint, setter];
+    useStore("tokenBId") [string, setter];
+    useStore("tokenBList") [DisablableToken[], setter];
+  }
+
+  class `Store< T >` {
+    staate: T;
+    setData(v:T) void;
+    subscribe(handler) void;
+  }
+
+  class RatesFetcher {
+    async fetchRates(a:Token, b:Token) Rates 
+  }
+
+  class Direction {
+    FORWARD,
+    BACKWARD
+  }
+
+  class Calculator {
+    async calculate(a:Token, b:Token, dir:Direction, rates:Rates):[bigint, Breakdown]
+  }
+
+  Token <|-- DisablableToken
+  Engine ..> RatesFetcher
+  Engine ..> Calculator
+  ReactAdaptor ..> Engine
+  Engine --> EngineStore
 ```
