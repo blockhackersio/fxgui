@@ -1,5 +1,6 @@
 // import { sum } from "./index.js";
 import { test, expect, vi } from "vitest";
+import Num from "@fxgui/precision";
 // import { Store } from "@tanstack/store";
 import {
   createEffect,
@@ -14,7 +15,7 @@ type Optional<T> = T | None;
 
 type Token = {
   id: string;
-  decimals: number;
+  decimals: bigint;
   logo?: string;
 };
 
@@ -131,9 +132,9 @@ class TokenMap {
 
 // Test Utils
 const Tokens: Token[] = [
-  { id: "BTC", decimals: 8 },
-  { id: "ETH", decimals: 8 },
-  { id: "USD", decimals: 8 },
+  { id: "BTC", decimals: 8n },
+  { id: "ETH", decimals: 8n },
+  { id: "USD", decimals: 8n },
 ];
 type TokenPair = [string, string];
 
@@ -242,6 +243,82 @@ function createEngine<TRates, TBreakdown>(
     breakdown,
   };
 }
+
+const assets = new TokenMap(Tokens);
+
+test("TokenMap", () => {
+  const bad = assets.get("foo");
+  expect(bad.err).toBe(true);
+  expect(bad.ok).toBe(false);
+
+  const good = assets.get("BTC");
+  expect(good.err).toBe(false);
+  expect(good.val).toEqual({ decimals: 8, id: "BTC" });
+});
+
+type Pool = [string, bigint, bigint];
+type IntTuple = [bigint, bigint];
+
+async function calculateFn(
+  amount: bigint,
+  a: Token,
+  b: Token,
+  dir: Direction,
+  rates: Pool,
+): Promise<[bigint, object]> {
+  const [tokenA, tokenB] = sortTokens(a, b);
+  const [, aAmount, bAmount] = rates;
+
+  const output = Num.from(amount, tokenA.decimals).mul(
+    Num.from(aAmount).div(Num.from(bAmount)),
+  );
+  return [output.unscale(tokenB.decimals), {}];
+}
+
+function sortTokens(a: Token, b: Token) {
+  if (a.id > b.id) {
+    return [b, a];
+  }
+  return [a, b];
+}
+
+function makeEngine() {
+  const calculate = vi.fn(calculateFn);
+
+  const pools: Record<string, IntTuple> = {
+    BTC_USD: [1n * 1_000_000n, 30_000n * 1_000_000n],
+    ETH_USD: [1n * 1_000_000n, 2_000n * 1_000_000n],
+    BTC_ETH: [1n * 1_000_000n, 15n * 1_000_000n],
+  };
+
+  const getRates = vi.fn(async (a: Token, b: Token): Promise<Pool> => {
+    const poolId = [a.id, b.id].sort().join("_");
+    return [poolId, ...pools[poolId]];
+  });
+
+  const engine = createEngine(assets, calculate, getRates);
+  return engine;
+}
+
+function fakeToken(exponent: bigint): Token {
+  return { decimals: exponent } as any as Token;
+}
+
+test("calculateFn", async () => {
+  const mult = 1_000_000n;
+  expect(
+    await calculateFn(100n, fakeToken(8n), fakeToken(8n), "forward", [
+      "BTC_USD",
+      30_000n * mult,
+      1n * mult,
+    ]),
+  ).toEqual("foo");
+});
+
+test("swap from ETH to BTC", () => {
+  const engine = makeEngine();
+  // engine.
+});
 
 // function makeEngine<TRates extends object, TBreakdown extends object>({
 //   // Pass through 1:1

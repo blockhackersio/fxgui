@@ -1,9 +1,9 @@
 {
-  "name": "@fxgui/core",
-  "version": "0.0.6",
-  "description": "FX Gui",
-  "type": "module",
-  "main": "./build/modern/index.cjs",
+  "name": "@fxgui/precision",
+  "version": "1.0.0",
+  "description": "",
+  "module": "src/index.ts",
+  "main": "./build/modern/index.mjs",
   "exports": {
     ".": {
       "import": {
@@ -12,7 +12,7 @@
       },
       "require": {
         "types": "./build/modern/index.d.ts",
-        "default": "./build/modern/index.cjs"
+        "default": "./build/modern/index.mjs"
       }
     },
     "./package.json": "./package.json"
@@ -22,17 +22,15 @@
     "build": "tsup"
   },
   "devDependencies": {
+    "@types/bn.js": "^5.1.5",
     "config": "workspace:*",
     "typescript": "^5.2.2",
     "vitest": "^0.34.6"
   },
   "keywords": [],
-  "author": "Rudi Yardley",
-  "license": "MIT",
+  "author": "",
+  "license": "ISC",
   "dependencies": {
-    "@msig/core": "^0.0.7",
-    "@tanstack/store": "^0.1.3",
-    "ts-results": "^3.3.0",
-    "tslib": "^2.6.2"
+    "bn.js": "^5.2.1"
   }
 }
