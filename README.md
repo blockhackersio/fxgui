@@ -69,7 +69,6 @@ useFxGui<TBreakdown extends object, TRates extends object>({
 };
 ```
 
-
 ```mermaid
 classDiagram
   class Token {
@@ -88,7 +87,7 @@ classDiagram
     ratesFetcher: RatesFetcher;
     calculator: Calculator;
     toggleTokens() void;
-    direction: Direction; 
+    direction: Direction;
   }
 
   class EngineStore {
@@ -117,7 +116,7 @@ classDiagram
   }
 
   class RatesFetcher {
-    async fetchRates(a:Token, b:Token) Rates 
+    async fetchRates(a:Token, b:Token) Rates
   }
 
   class Direction {
@@ -134,4 +133,16 @@ classDiagram
   Engine ..> Calculator : uses
   ReactAdaptor ..> Engine : uses
   Engine --> EngineStore : has
+```
+
+Looks like `@tanstack/store` doesn't quite work in terms of compostion so we will need to wrap it a little
+
+```ts
+const firstName = ref("Rudi");
+const lastName = ref("Yardley");
+const fullName = computed(() => firstName.value + " " + lastName.value);
+
+effect(() => {
+  console.log(fullName.value);
+});
 ```

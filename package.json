@@ -4,13 +4,13 @@
     "build": "turbo run build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
-    "test": "CI=1 turbo run test",
+    "test": "turbo run test",
     "format": "prettier --write \"**/*.{ts,tsx,md}\""
   },
   "devDependencies": {
     "eslint": "^8.48.0",
     "prettier": "^3.0.3",
-    "tsconfig": "workspace:*",
+    "config": "workspace:*",
     "tsup": "^7.2.0",
     "turbo": "latest",
     "vitest": "^0.34.6"
