@@ -1,4 +1,4 @@
-import { esbuildPluginFilePathExtensions } from "esbuild-plugin-file-path-extensions";
+// import { esbuildPluginFilePathExtensions } from "esbuild-plugin-file-path-extensions";
 
 export function modernConfig(opts) {
   return {
@@ -8,7 +8,7 @@ export function modernConfig(opts) {
     outDir: "build/modern",
     dts: true,
     sourcemap: true,
-    clean: true,
-    esbuildPlugins: [esbuildPluginFilePathExtensions({ esmExtension: "js" })],
+    // clean: true,
+    // esbuildPlugins: [esbuildPluginFilePathExtensions({ esmExtension: "js" })],
   };
 }

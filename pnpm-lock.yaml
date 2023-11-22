@@ -35,6 +35,9 @@ importers:
 
   libs/core:
     dependencies:
+      '@fxgui/precision':
+        specifier: workspace:*
+        version: link:../precision
       '@msig/core':
         specifier: ^0.0.7
         version: 0.0.7

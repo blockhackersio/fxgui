@@ -1,6 +1,6 @@
 // import { sum } from "./index.js";
 import { test, expect, vi } from "vitest";
-import Num from "@fxgui/precision";
+import { Precision as Num } from "@fxgui/precision";
 // import { Store } from "@tanstack/store";
 import {
   createEffect,
@@ -253,7 +253,7 @@ test("TokenMap", () => {
 
   const good = assets.get("BTC");
   expect(good.err).toBe(false);
-  expect(good.val).toEqual({ decimals: 8, id: "BTC" });
+  expect(good.val).toEqual({ decimals: 8n, id: "BTC" });
 });
 
 type Pool = [string, bigint, bigint];
@@ -312,7 +312,7 @@ test("calculateFn", async () => {
       30_000n * mult,
       1n * mult,
     ]),
-  ).toEqual("foo");
+  ).toEqual([3000000n, {}]);
 });
 
 test("swap from ETH to BTC", () => {

@@ -1,5 +1,5 @@
 import BN from "bn.js";
-import parseScientific, { checkScientific } from "./utils/parseScientific";
+import parseScientific, { checkScientific } from "./parseScientific";
 
 type FormatLocale = "de-DE" | "en-US";
 
@@ -40,19 +40,19 @@ const INTERNAL_SCALE = 33n;
 
 const SCALE_FOR_MULTI_DIVI = new BN(`${10n ** INTERNAL_SCALE}`);
 
-const toBN = (BIP: BIP): BN => {
-  return new BN(`${BIP.unscale(INTERNAL_SCALE)}`);
+const toBN = (Precision: Precision): BN => {
+  return new BN(`${Precision.unscale(INTERNAL_SCALE)}`);
 };
 
 const toBigInt = (bn: BN): bigint => {
   return BigInt(bn.toString());
 };
 
-const toBIP = (bn: BN): BIP => {
-  return new BIP(toBigInt(bn), INTERNAL_SCALE);
+const toBIP = (bn: BN): Precision => {
+  return new Precision(toBigInt(bn), INTERNAL_SCALE);
 };
 
-export default class BIP {
+export class Precision {
   #scaled: BN;
   static FORMAT_EUR: FormatType = FORMATS.EUR;
   static FORMAT_DOLLAR: FormatType = FORMATS.DOLLAR;
@@ -63,25 +63,26 @@ export default class BIP {
     this.#scaled = new BN(`${value * 10n ** (INTERNAL_SCALE - exponent)}`);
   }
 
-  static from(value: bigint, exponent: bigint = 0n): BIP {
-    return new BIP(value, exponent);
+  static from(value: bigint, exponent: bigint = 0n): Precision {
+    return new Precision(value, exponent);
   }
-  static fromNumber(value: number | string): BIP {
-    if (Number.isInteger(value)) return new BIP(BigInt(value));
+  static fromNumber(value: number | string): Precision {
+    if (Number.isInteger(value)) return new Precision(BigInt(value));
     // split number into whole and fractional
     if (typeof value === "number") {
       const [whole, fractional] = value.toString().split(".");
       const exponent = BigInt(fractional.length);
       const bigInt = BigInt(`${whole}${fractional}`);
-      return new BIP(bigInt, exponent);
+      return new Precision(bigInt, exponent);
     }
     if (checkScientific(value)) {
       const parsed = parseScientific(value);
-      if (Number.isInteger(Number(parsed))) return new BIP(BigInt(parsed));
+      if (Number.isInteger(Number(parsed)))
+        return new Precision(BigInt(parsed));
       const [whole, fractional] = parsed.toString().split(".");
       const exponent = BigInt(fractional.length);
       const bigInt = BigInt(`${whole}${fractional}`);
-      return new BIP(bigInt, exponent);
+      return new Precision(bigInt, exponent);
     }
     throw new Error(
       "You have entered a value that isn't a number or scientific notation",
@@ -106,7 +107,7 @@ export default class BIP {
   toFormat(locale: FormatType, fractionalLength: number = 8): string {
     const unscaledNumber = toBIP(this.#scaled).toNumber();
     const options =
-      locale !== BIP.FORMAT_TOKEN &&
+      locale !== Precision.FORMAT_TOKEN &&
       Number.isInteger(Number(unscaledNumber.toFixed(2)))
         ? {
             ...locale.options,
@@ -119,23 +120,23 @@ export default class BIP {
     return unscaledNumber.toLocaleString(locale.code, options);
   }
 
-  add(other: BIP): BIP {
+  add(other: Precision): Precision {
     const sum = this.#scaled.add(toBN(other));
     return toBIP(sum);
   }
 
-  sub(other: BIP): BIP {
+  sub(other: Precision): Precision {
     const difference = this.#scaled.sub(toBN(other));
     return toBIP(difference);
   }
 
-  mul(other: BIP): BIP {
+  mul(other: Precision): Precision {
     const product = this.#scaled.mul(toBN(other));
     const deScaledProduct = product.div(SCALE_FOR_MULTI_DIVI);
     return toBIP(deScaledProduct);
   }
 
-  div(other: BIP): BIP {
+  div(other: Precision): Precision {
     const scaledProduct = this.#scaled.mul(SCALE_FOR_MULTI_DIVI);
     const quotient = scaledProduct.div(toBN(other));
     return toBIP(quotient);
