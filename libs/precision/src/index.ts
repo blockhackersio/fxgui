@@ -48,7 +48,7 @@ const toBigInt = (bn: BN): bigint => {
   return BigInt(bn.toString());
 };
 
-const toBIP = (bn: BN): Precision => {
+const toPrecision = (bn: BN): Precision => {
   return new Precision(toBigInt(bn), INTERNAL_SCALE);
 };
 
@@ -95,17 +95,17 @@ export class Precision {
   }
 
   toNumber(): number {
-    const unscaled = toBIP(this.#scaled).unscale(INTERNAL_SCALE);
+    const unscaled = toPrecision(this.#scaled).unscale(INTERNAL_SCALE);
     return Number(unscaled) / 10 ** Number(INTERNAL_SCALE);
   }
 
   toString(): string {
-    const unscaledNumber = toBIP(this.#scaled).toNumber();
+    const unscaledNumber = toPrecision(this.#scaled).toNumber();
     return parseScientific(`${unscaledNumber}`);
   }
 
   toFormat(locale: FormatType, fractionalLength: number = 8): string {
-    const unscaledNumber = toBIP(this.#scaled).toNumber();
+    const unscaledNumber = toPrecision(this.#scaled).toNumber();
     const options =
       locale !== Precision.FORMAT_TOKEN &&
       Number.isInteger(Number(unscaledNumber.toFixed(2)))
@@ -122,23 +122,23 @@ export class Precision {
 
   add(other: Precision): Precision {
     const sum = this.#scaled.add(toBN(other));
-    return toBIP(sum);
+    return toPrecision(sum);
   }
 
   sub(other: Precision): Precision {
     const difference = this.#scaled.sub(toBN(other));
-    return toBIP(difference);
+    return toPrecision(difference);
   }
 
   mul(other: Precision): Precision {
     const product = this.#scaled.mul(toBN(other));
     const deScaledProduct = product.div(SCALE_FOR_MULTI_DIVI);
-    return toBIP(deScaledProduct);
+    return toPrecision(deScaledProduct);
   }
 
   div(other: Precision): Precision {
     const scaledProduct = this.#scaled.mul(SCALE_FOR_MULTI_DIVI);
     const quotient = scaledProduct.div(toBN(other));
-    return toBIP(quotient);
+    return toPrecision(quotient);
   }
 }

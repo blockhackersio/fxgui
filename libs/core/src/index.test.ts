@@ -1,248 +1,14 @@
-// import { sum } from "./index.js";
 import { test, expect, vi } from "vitest";
+import { TokenMap, Token, Direction, None, createEngine } from ".";
 import { Precision as Num } from "@fxgui/precision";
-// import { Store } from "@tanstack/store";
-import {
-  createEffect,
-  createMemo,
-  createResource,
-  createSignal,
-} from "@msig/core";
-import { Err, Ok, Result } from "ts-results";
-const None = undefined;
-type None = undefined;
-type Optional<T> = T | None;
-
-type Token = {
-  id: string;
-  decimals: bigint;
-  logo?: string;
-};
-
-type Disablable<T> = T & {
-  disabled?: boolean;
-};
-
-type Direction = "forward" | "backward";
-
-type CalculationResult<TBreakdown> = [bigint, TBreakdown];
-
-type CalculateFn<TRates, TBreakdown> = (
-  amount: bigint,
-  a: Token,
-  b: Token,
-  dir: Direction,
-  rates: TRates,
-) => Promise<CalculationResult<TBreakdown>>;
-
-type RatesFn<TRates> = (a: Token, b: Token) => Promise<TRates>;
-
-class TokenMap {
-  private tokens: Map<string, Token> = new Map();
-  constructor(tokens: Token[]) {
-    for (const token of tokens) {
-      this.add(token);
-    }
-  }
-  get(id: string): Result<Token, "unknown_token"> {
-    const found = this.tokens.get(id);
-    if (!found) return Err("unknown_token");
-    return Ok(found);
-  }
-  add(token: Token) {
-    this.tokens.set(token.id, token);
-  }
-  all(): Token[] {
-    return [...this.tokens].map(([, t]) => t);
-  }
-  static from(tokens: Token[]) {
-    return new TokenMap(tokens);
-  }
-}
-
-// class Engine<TRates extends object, TBreakdown extends object> {
-// public tokenAAmt: Store<bigint> = new Store(0n, {
-//   onUpdate: async () => {
-//     const amount = this.tokenAAmt.state;
-//     if (this.tokenAId.state === "") return;
-//     const result = await this.runCalculate("forward", amount);
-//
-//     if (result.ok) {
-//       const [amount, breakdown] = result.val;
-//       console.log({ amount, breakdown });
-//       this.breakdown.setState(() => breakdown);
-//       this.tokenBAmt.setState(() => amount);
-//     }
-//   },
-// });
-// public tokenBAmt = new Store(0n);
-// public tokenAId = new Store("");
-// public tokenBId = new Store("");
-// public tokenAList = new Store<Token[]>([]);
-// public tokenBList = new Store<Token[]>([]);
-// public rates: Store<TRates | null> = new Store(null as TRates | null);
-// public breakdown: Store<TBreakdown | null> = new Store(
-//   null as TBreakdown | null,
-// );
-
-//   constructor(
-//     private assets: TokenMap,
-//     private calculate: CalculateFn<TRates, TBreakdown>,
-//     private fetchRates?: RatesFn<TRates>,
-//   ) {
-//     const tokens = assets.all();
-//     this.tokenAList.setState(() => tokens);
-//     this.tokenBList.setState(() => tokens);
-//   }
-//
-//   async runCalculate(
-//     dir: Direction,
-//     amount: bigint,
-//   ): AsyncResult<[bigint, TBreakdown], "calculate_error"> {
-//     const tokenA = this.assets
-//       .get(this.tokenAId.state)
-//       .expect("calculate_error");
-//     const tokenB = this.assets
-//       .get(this.tokenBId.state)
-//       .expect("calculate_error");
-//     return this.calculate(
-//       amount,
-//       tokenA,
-//       tokenB,
-//       dir,
-//       this.rates.state || ({} as TRates),
-//     );
-//   }
-// }
-
-// class Engine<TRates, TBreakdown> {
-//   setTokenAAmt: (v: bigint) => bigint;
-//   tokenAAmt: () => bigint;
-//   constructor(
-//     private assets: TokenMap,
-//     private calculate: CalculateFn<TRates, TBreakdown>,
-//   ) {
-//     [this.tokenAAmt, this.setTokenAAmt] = createSignal(0n);
-//   }
-//
-//   init() {}
-//
-//   static create() {}
-// }
+import { nextTick } from "@msig/core";
 
 // Test Utils
 const Tokens: Token[] = [
   { id: "BTC", decimals: 8n },
-  { id: "ETH", decimals: 8n },
-  { id: "USD", decimals: 8n },
+  { id: "ETH", decimals: 18n },
+  { id: "USD", decimals: 2n },
 ];
-type TokenPair = [string, string];
-
-function createEngine<TRates, TBreakdown>(
-  assets: TokenMap,
-  calculate: CalculateFn<TRates, TBreakdown>,
-  getRates: RatesFn<TRates>,
-) {
-  const [tokenAAmt, setTokenAAmt] = createSignal(0n);
-  const [tokenBAmt, setTokenBAmt] = createSignal(0n);
-  const [direction, setDirection] = createSignal<"forward" | "backward">(
-    "forward",
-  );
-
-  const [reactiveA, setReactiveA] = createSignal(tokenAAmt());
-  const [reactiveB, setReactiveB] = createSignal(tokenBAmt());
-
-  createEffect(() => {
-    const dir = direction();
-    const a = tokenAAmt();
-    const b = tokenBAmt();
-    if (dir === "forward") {
-      setReactiveA(a);
-    } else {
-      setReactiveB(b);
-    }
-  });
-
-  const [tokenAId, setTokenAId] = createSignal<Optional<string>>(None);
-  const [tokenBId, setTokenBId] = createSignal<Optional<string>>(None);
-
-  const tokenPair = createMemo(() => {
-    const aId = tokenAId();
-    const bId = tokenBId();
-    return aId && bId ? [aId, bId] : None;
-  });
-
-  const [rates] = createResource(tokenPair, async (pair) => {
-    if (!pair) return None;
-    const [aId, bId] = pair;
-    const a = assets.get(aId);
-    const b = assets.get(bId);
-    if (!a.ok || !b.ok) return None;
-    return await getRates(a.val, b.val);
-  });
-
-  const combined = createMemo(() => {
-    return {
-      tokenPair: tokenPair(),
-      rates: rates(),
-      tokenAAmt: reactiveA(),
-      tokenBAmt: reactiveB(),
-      direction: direction(),
-    };
-  });
-
-  const [calculated] = createResource(combined, async (input) => {
-    if (!input || !input.tokenPair || !input.rates) return None;
-    const [aId, bId] = input.tokenPair;
-    const tokenA = assets.get(aId);
-    const tokenB = assets.get(bId);
-    if (tokenA.err || tokenB.err) return None;
-    const amount =
-      input.direction === "forward" ? input.tokenAAmt : input.tokenBAmt;
-    const [result, breakdown] = await calculate(
-      amount,
-      tokenA.val,
-      tokenB.val,
-      input.direction,
-      input.rates,
-    );
-    return {
-      output: result,
-      breakdown,
-    };
-  });
-
-  const breakdown = createMemo(() => {
-    const input = calculated();
-    if (!input) return None;
-    return input.breakdown;
-  });
-
-  createEffect(() => {
-    const input = calculated();
-    const dir = direction();
-    if (!input) return None;
-    if (dir === "forward") {
-      setTokenBAmt(input.output);
-    } else {
-      setTokenAAmt(input.output);
-    }
-  });
-
-  return {
-    direction,
-    setDirection,
-    setTokenAAmt,
-    setTokenAId,
-    setTokenBAmt,
-    setTokenBId,
-    tokenAAmt,
-    tokenAId,
-    tokenBAmt,
-    tokenBId,
-    breakdown,
-  };
-}
 
 const assets = new TokenMap(Tokens);
 
@@ -256,113 +22,238 @@ test("TokenMap", () => {
   expect(good.val).toEqual({ decimals: 8n, id: "BTC" });
 });
 
-type Pool = [string, bigint, bigint];
+type Pool = { ticker: string; pair: Record<string, bigint> };
 type IntTuple = [bigint, bigint];
 
+function calculateForwards(input: Num, pa: Num, pb: Num, fPerc: Num) {
+  const preFee = input.mul(pb.div(pa));
+  const fee = preFee.mul(fPerc);
+  const total = preFee.add(fee);
+  return {
+    fee,
+    total,
+    preFee,
+  };
+}
+
+function calculateBackwards(total: Num, pa: Num, pb: Num, fPerc: Num) {
+  const preFee = total.div(fPerc.add(Num.from(1n)));
+  const fee = total.sub(preFee);
+  const input = preFee.div(pb.div(pa));
+  return {
+    preFee,
+    fee,
+    input,
+  };
+}
+type Breakdown = {
+  feePerc: bigint;
+  feeAmt: bigint;
+};
 async function calculateFn(
   amount: bigint,
   a: Token,
   b: Token,
   dir: Direction,
   rates: Pool,
-): Promise<[bigint, object]> {
-  const [tokenA, tokenB] = sortTokens(a, b);
-  const [, aAmount, bAmount] = rates;
+): Promise<[bigint, Breakdown]> {
+  // console.log("calculateFn");
+  const { pair } = rates;
+  const aAmount = pair[a.id];
+  const bAmount = pair[b.id];
+  const feePercInt = 50n;
+  if (aAmount === None || bAmount === None)
+    throw new Error("invalid token for pool" + a.id);
 
-  const output = Num.from(amount, tokenA.decimals).mul(
-    Num.from(aAmount).div(Num.from(bAmount)),
-  );
-  return [output.unscale(tokenB.decimals), {}];
+  if (dir === "forward") {
+    const pa = Num.from(aAmount, a.decimals);
+    const pb = Num.from(bAmount, b.decimals);
+
+    // Do calculations
+    const input = Num.from(amount, a.decimals);
+    const { fee, total } = calculateForwards(
+      input,
+      pa,
+      pb,
+      Num.from(feePercInt).div(Num.from(10000n)),
+    );
+
+    // calculate fee
+    // Convert to bigint
+    const totalInt = total.unscale(b.decimals);
+    const feeAmtInt = fee.unscale(b.decimals);
+    const breakdown = {
+      feePerc: feePercInt,
+      feeAmt: feeAmtInt,
+    };
+    return [totalInt, breakdown];
+  } else {
+    const pa = Num.from(aAmount, a.decimals);
+    const pb = Num.from(bAmount, b.decimals);
+    const total = Num.from(amount, b.decimals);
+    const { fee, input } = calculateBackwards(
+      total,
+      pa,
+      pb,
+      Num.from(feePercInt).div(Num.from(10000n)),
+    );
+    const inputInt = input.unscale(a.decimals);
+    const feeAmtInt = fee.unscale(b.decimals);
+
+    const breakdown = {
+      feePerc: feePercInt,
+      feeAmt: feeAmtInt,
+    };
+    return [inputInt, breakdown];
+  }
 }
 
-function sortTokens(a: Token, b: Token) {
-  if (a.id > b.id) {
-    return [b, a];
-  }
-  return [a, b];
+const pools: Record<string, IntTuple> = {
+  BTC_USD: [1n * 1_00000000n, 30000_00n],
+  ETH_USD: [1n * 1_000000000000000000n, 2000_00n],
+  BTC_ETH: [1n * 1_00000000n, 15_000000000000000000n],
+};
+
+async function ratesFn(a: Token, b: Token): Promise<Pool> {
+  const poolId = [a.id, b.id].sort().join("_");
+  const [aId, bId] = poolId.split("_");
+  const pair = {
+    [aId]: pools[poolId][0],
+    [bId]: pools[poolId][1],
+  };
+  return {
+    ticker: poolId,
+    pair,
+  };
 }
 
 function makeEngine() {
   const calculate = vi.fn(calculateFn);
-
-  const pools: Record<string, IntTuple> = {
-    BTC_USD: [1n * 1_000_000n, 30_000n * 1_000_000n],
-    ETH_USD: [1n * 1_000_000n, 2_000n * 1_000_000n],
-    BTC_ETH: [1n * 1_000_000n, 15n * 1_000_000n],
-  };
-
-  const getRates = vi.fn(async (a: Token, b: Token): Promise<Pool> => {
-    const poolId = [a.id, b.id].sort().join("_");
-    return [poolId, ...pools[poolId]];
-  });
-
-  const engine = createEngine(assets, calculate, getRates);
-  return engine;
+  const rates = vi.fn(ratesFn);
+  const engine = createEngine(assets, calculate, rates);
+  return { engine, calculate, rates };
 }
 
-function fakeToken(exponent: bigint): Token {
-  return { decimals: exponent } as any as Token;
-}
-
-test("calculateFn", async () => {
-  const mult = 1_000_000n;
+test("calculateFn btc -> usd", async () => {
   expect(
-    await calculateFn(100n, fakeToken(8n), fakeToken(8n), "forward", [
-      "BTC_USD",
-      30_000n * mult,
-      1n * mult,
-    ]),
-  ).toEqual([3000000n, {}]);
+    await calculateFn(
+      1_00000000n,
+      assets.get("BTC").unwrap(),
+      assets.get("USD").unwrap(),
+      "forward",
+      {
+        ticker: "BTC_USD",
+        pair: {
+          BTC: pools["BTC_USD"][0],
+          USD: pools["BTC_USD"][1],
+        },
+      },
+    ),
+  ).toEqual([
+    3015000n,
+    {
+      feeAmt: 15000n,
+      feePerc: 50n,
+    },
+  ]);
+});
+test("calculateFn btc -> usd backwards", async () => {
+  expect(
+    await calculateFn(
+      3015000n,
+      assets.get("BTC").unwrap(),
+      assets.get("USD").unwrap(),
+      "backward",
+      {
+        ticker: "BTC_USD",
+        pair: {
+          BTC: pools["BTC_USD"][0],
+          USD: pools["BTC_USD"][1],
+        },
+      },
+    ),
+  ).toEqual([
+    1_00000000n,
+    {
+      feeAmt: 15000n,
+      feePerc: 50n,
+    },
+  ]);
+});
+test("calculateFn usd -> btc", async () => {
+  expect(
+    await calculateFn(
+      30000_00n,
+      assets.get("USD").unwrap(),
+      assets.get("BTC").unwrap(),
+      "forward",
+      {
+        ticker: "BTC_USD",
+        pair: {
+          BTC: pools["BTC_USD"][0],
+          USD: pools["BTC_USD"][1],
+        },
+      },
+    ),
+  ).toEqual([
+    100499999n,
+    {
+      feeAmt: 499999n,
+      feePerc: 50n,
+    },
+  ]);
 });
 
-test("swap from ETH to BTC", () => {
-  const engine = makeEngine();
-  // engine.
+test("swap from ETH to BTC", async () => {
+  const { engine, calculate, rates } = makeEngine();
+  engine.setTokenAId("BTC");
+  engine.setTokenBId("USD");
+  engine.setDirection("forward");
+  engine.setTokenAAmt(100000000n); // 1 BTC
+  expect(engine.tokenBAmt()).toBe(0n); // Will take some time to settle
+  await expectEventually(engine.tokenBAmt, 3015000n);
+  expect(engine.breakdown()?.feeAmt).toBe(150_00n);
+  expect(engine.breakdown()?.feePerc).toBe(50n);
+  expect(calculate).toHaveBeenCalledTimes(2);
+  expect(rates).toHaveBeenCalledTimes(1);
+  engine.setTokenAId("ETH");
+  engine.setTokenAAmt(1_000000000000000000n);
+  await expectEventually(engine.tokenBAmt, 2010_00n);
+  engine.setTokenAAmt(2_000000000000000000n);
+  await expectEventually(engine.tokenBAmt, 4020_00n);
 });
 
-// function makeEngine<TRates extends object, TBreakdown extends object>({
-//   // Pass through 1:1
-//   calculate = async (amount: bigint) => Ok([amount, {} as TBreakdown]),
-//   rates = async () => Ok({} as TRates),
-// }: {
-//   calculate?: CalculateFn<TRates, TBreakdown>;
-//   rates?: RatesFn<TRates>;
-// } = {}) {
-//   const cFn = vi.fn(calculate);
-//   const rFn = vi.fn(rates);
-//   // return new Engine(TokenMap.from(Tokens), cFn, rFn);
-// }
+type CheckerFn<T> = (v: T) => boolean;
 
-// function value<T>(s: Store<T>): Promise<T> {
-//   return new Promise((res, rej) => {
-//     const t = setTimeout(() => {
-//       rej("Store timed out");
-//     }, 1000);
-//     s.subscribe(() => {
-//       clearTimeout(t);
-//       res(s.state);
-//     });
-//   });
-// }
+function isCheckerFn<T>(v: T | CheckerFn<T>): v is CheckerFn<T> {
+  return typeof v === "function";
+}
 
-// test("Engine is instance of Engine", () => {
-//   expect(makeEngine()).toBeInstanceOf(Engine);
-// });
-//
-// test("Engine has sensible defaults", () => {
-//   const e = makeEngine();
-//   expect(e.tokenAAmt.state).toBe(0n);
-//   expect(e.tokenBAmt.state).toBe(0n);
-//   expect(e.tokenAId.state).toBe("");
-//   expect(e.tokenBId.state).toBe("");
-//   expect(e.tokenAList.state).toEqual(Tokens);
-//   expect(e.tokenBList.state).toEqual(Tokens);
-// });
+async function eventually<T>(
+  fn: () => T,
+  checker: T | CheckerFn<T>,
+): Promise<T> {
+  return new Promise((res, rej) => {
+    async function getEventually() {
+      let val = fn();
+      const checkerFn = isCheckerFn(checker) ? checker : (c: T) => c == checker;
+      while (!checkerFn(val)) {
+        await nextTick();
+        val = await fn();
+      }
+      return val;
+    }
 
-// test("Setting tokenAAmt and a tokenAId and a tokenBId results in tokenBAmt changing according to the calculator", async () => {
-//   const e = makeEngine();
-//   e.tokenBId.setState(() => "USD");
-//   e.tokenAId.setState(() => "BTC");
-//   e.tokenAAmt.setState(() => 1000n);
-//   expect(await value(e.tokenBAmt)).toBe(1000n);
-// });
+    const tid = setTimeout(() => {
+      rej("Timeout:" + fn());
+    }, 3000);
+    getEventually().then((val) => {
+      clearTimeout(tid);
+      res(val);
+    });
+  });
+}
+
+async function expectEventually<T>(fn: () => T, value: T) {
+  return expect(eventually(fn, value)).resolves.toBeTruthy();
+}
