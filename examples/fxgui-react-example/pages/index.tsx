@@ -12,7 +12,7 @@ import {
   assetAmtStrToInt,
   intToAssetAmtStr,
 } from "@fxgui/core";
-import { Precision as Num } from "@fxgui/precision";
+import { FORMATS, Precision as Num, Precision } from "@fxgui/precision";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 type Pool = { ticker: string; pair: Record<string, bigint> };
@@ -129,7 +129,7 @@ const assets = new TokenMap(Tokens);
 
 const engine = createEngine(assets, calculateFn, ratesFn);
 
-function useEngine(e: Engine) {
+function useEngine<R, B>(e: Engine<R, B>) {
   const { setDirection, setTokenAAmt, setTokenAId, setTokenBAmt, setTokenBId } =
     e;
 
@@ -258,6 +258,19 @@ function TokenInput(props: {
   );
 }
 
+function formatByToken(amount?: bigint, tokenId?: string) {
+  if (typeof amount === "undefined") return null;
+  const token = assets.get(tokenId ?? "");
+  if (!token) return null;
+  return Precision.from(amount, token.decimals).toFormat(FORMATS.PERCENT);
+}
+
+function formatByPlaces(amount?: bigint, exponent?: bigint) {
+  if (typeof amount === "undefined" || typeof exponent === "undefined")
+    return null;
+  return Precision.from(amount, exponent).toFormat(FORMATS.PERCENT);
+}
+
 function SwapInterface() {
   const e = useEngine(engine);
   const onTokenAChange = (a: bigint) => {
@@ -294,8 +307,18 @@ function SwapInterface() {
           onFocus={onTokenBFocus}
         />
       </Flex>
+      {e.breakdown && (
+        <div>
+          <div>{formatByPlaces(e.breakdown.feePerc, 2n)}%</div>
+
+          <div>
+            {formatByToken(e.breakdown.feeAmt, e.tokenBId)} {e.tokenBId}
+          </div>
+        </div>
+      )}
       <Button width="100%">Swap</Button>
-      <pre>{toString(e)}</pre>
+      {e.breakdown?.feeAmt.toString()}
+      {e.breakdown?.feePerc.toString()}
     </VStack>
   );
 }

@@ -1,14 +1,14 @@
 import BN from "bn.js";
 import parseScientific, { checkScientific } from "./parseScientific";
 
-type FormatLocale = "de-DE" | "en-US";
+export type FormatLocale = "de-DE" | "en-US";
 
-type FormatType = {
+export type FormatType = {
   code: FormatLocale;
   options?: Intl.NumberFormatOptions;
 };
 
-const FORMATS: { [key: string]: FormatType } = {
+export const FORMATS: { [key: string]: FormatType } = {
   EUR: {
     code: "de-DE",
     options: {

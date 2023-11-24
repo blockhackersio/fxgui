@@ -203,6 +203,7 @@ test("calculateFn usd -> btc", async () => {
 });
 
 test("convert between scales", () => {
+  expect(intToAssetAmtStr(8n, 6633n)).toBe("0.00006633");
   expect(intToAssetAmtStr(0n, 1000n)).toBe("1000");
   expect(assetAmtStrToInt(0n, "1000")).toBe(1000n);
   expect(intToAssetAmtStr(2n, 10000n)).toBe("100.00");

@@ -54,7 +54,7 @@ export class TokenMap {
   }
 }
 
-export type Engine = ReturnType<typeof createEngine>;
+export type Engine<R, B> = ReturnType<typeof createEngine<R, B>>;
 
 export function createEngine<TRates, TBreakdown>(
   assets: TokenMap,
@@ -192,5 +192,7 @@ export function intToAssetAmtStr(decimals: bigint, amount: bigint): string {
   }
   const decimal = aStr.slice(-dNum);
   const integer = aStr.slice(0, -dNum);
-  return [integer || "0", decimal].filter(Boolean).join(".");
+  return [integer || "0", decimal.padStart(dNum, "0")]
+    .filter(Boolean)
+    .join(".");
 }
