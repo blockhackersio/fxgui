@@ -301,24 +301,11 @@ function SwapInterface() {
 }
 
 export default function Home() {
-  // const [val, setVal] = useState("");
-  // const onChange = (value: string) => {
-  //   setVal(value);
-  // };
   return (
     <div>
       <SwapInterface />
     </div>
   );
-
-  // return (
-  //   <VStack width="100%">
-  //     {/* <SwapInterface /> */}
-  //     <div>{val}</div>
-  //     <br />
-  //     <BlurInput value={val} onChange={onChange} />
-  //   </VStack>
-  // );
 }
 function toString(o: any) {
   return JSON.stringify(
