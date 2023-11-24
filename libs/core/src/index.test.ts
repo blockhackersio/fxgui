@@ -1,5 +1,13 @@
 import { test, expect, vi } from "vitest";
-import { TokenMap, Token, Direction, None, createEngine } from ".";
+import {
+  TokenMap,
+  Token,
+  Direction,
+  None,
+  createEngine,
+  intToAssetAmtStr,
+  assetAmtStrToInt,
+} from ".";
 import { Precision as Num } from "@fxgui/precision";
 import { nextTick } from "@msig/core";
 
@@ -192,6 +200,17 @@ test("calculateFn usd -> btc", async () => {
       feePerc: 50n,
     },
   ]);
+});
+
+test("convert between scales", () => {
+  expect(intToAssetAmtStr(0n, 1000n)).toBe("1000");
+  expect(assetAmtStrToInt(0n, "1000")).toBe(1000n);
+  expect(intToAssetAmtStr(2n, 10000n)).toBe("100.00");
+  expect(assetAmtStrToInt(2n, "1000")).toBe(100000n);
+  expect(assetAmtStrToInt(2n, "1000.000000000")).toBe(100000n);
+  expect(assetAmtStrToInt(2n, "1234.567890123")).toBe(123456n);
+  expect(assetAmtStrToInt(4n, "0.1234")).toBe(1234n);
+  expect(intToAssetAmtStr(4n, 1234n)).toBe("0.1234");
 });
 
 test("swap from ETH to BTC", async () => {

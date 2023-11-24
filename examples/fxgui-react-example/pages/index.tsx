@@ -9,8 +9,11 @@ import {
   Token,
   TokenMap,
   createEngine,
+  assetAmtStrToInt,
+  intToAssetAmtStr,
 } from "@fxgui/core";
 import { Precision as Num } from "@fxgui/precision";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 type Pool = { ticker: string; pair: Record<string, bigint> };
 type IntTuple = [bigint, bigint];
@@ -149,6 +152,62 @@ function useEngine(e: Engine) {
   };
 }
 
+function BlurInput({
+  value,
+  onChange = () => {},
+  onFocus = () => {},
+  placeholder = "",
+}: {
+  value: string;
+  onChange?: (v: string) => void;
+  onFocus?: () => void;
+  placeholder?: string;
+}) {
+  const [tempValue, setTempValue] = useState(value);
+  const [focussed, setFocus] = useState(false);
+  const ref = useRef<HTMLInputElement>(null);
+  const displayValue = focussed ? tempValue : value;
+
+  const commitChange = () => {
+    onChange(tempValue);
+    setFocus(false);
+    ref.current?.blur();
+  };
+  const stageChange = (e: { target: { value: string } }) => {
+    setTempValue(e.target.value);
+  };
+  const onKeyDown = (e: { key: string }) => {
+    if (e.key === "Enter") {
+      commitChange();
+    }
+  };
+  return (
+    <Input
+      ref={ref}
+      type="text"
+      value={displayValue}
+      onFocus={() => {
+        setFocus(true);
+        setTempValue(value);
+        onFocus();
+      }}
+      onBlur={commitChange}
+      onChange={stageChange}
+      onKeyDown={onKeyDown}
+      placeholder={placeholder}
+    />
+  );
+}
+
+function getDecimals(tokenId?: string): bigint {
+  if (!tokenId) {
+    return 0n;
+  }
+  const token = assets.get(tokenId);
+  if (!token) return 0n;
+  return token.decimals;
+}
+
 function TokenInput(props: {
   amount: bigint;
   tokenId?: string;
@@ -157,11 +216,17 @@ function TokenInput(props: {
   onSelect: (v: string) => void;
   onFocus: () => void;
 }) {
-  const onChange = (e: { target: { value: string } }) => {
-    const { value } = e.target;
-    const valueAsInt = BigInt(value);
-    props.onChange(valueAsInt);
+  const decimals = getDecimals(props.tokenId);
+  const onChange = (value: string) => {
+    try {
+      const valueAsInt = assetAmtStrToInt(decimals, value);
+      props.onChange(valueAsInt);
+    } catch (err) {
+      console.error(err);
+      return;
+    }
   };
+
   const onSelect = (e: { target: { value: string } }) => {
     props.onSelect(e.target.value);
   };
@@ -169,10 +234,12 @@ function TokenInput(props: {
   const onFocus = () => {
     props.onFocus();
   };
-  const valueAsStr = `${props.amount}`;
+
+  const valueAsStr = intToAssetAmtStr(decimals, props.amount);
+
   return (
     <Flex>
-      <Input
+      <BlurInput
         placeholder="0.0"
         value={valueAsStr}
         onChange={onChange}
@@ -234,11 +301,24 @@ function SwapInterface() {
 }
 
 export default function Home() {
+  // const [val, setVal] = useState("");
+  // const onChange = (value: string) => {
+  //   setVal(value);
+  // };
   return (
-    <HStack width="100%">
+    <div>
       <SwapInterface />
-    </HStack>
+    </div>
   );
+
+  // return (
+  //   <VStack width="100%">
+  //     {/* <SwapInterface /> */}
+  //     <div>{val}</div>
+  //     <br />
+  //     <BlurInput value={val} onChange={onChange} />
+  //   </VStack>
+  // );
 }
 function toString(o: any) {
   return JSON.stringify(

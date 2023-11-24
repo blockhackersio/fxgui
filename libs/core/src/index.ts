@@ -175,3 +175,22 @@ export function createEngine<TRates, TBreakdown>(
     breakdown,
   };
 }
+
+export function assetAmtStrToInt(decimals: bigint, amount: string): bigint {
+  const dNum = Number(decimals);
+  let [integerStr, decimalStr = ""] = amount.split(".");
+  decimalStr = decimalStr.slice(0, dNum) ?? "";
+  const total = BigInt([integerStr, decimalStr.padEnd(dNum, "0")].join(""));
+  return total;
+}
+
+export function intToAssetAmtStr(decimals: bigint, amount: bigint): string {
+  const aStr = amount.toString();
+  const dNum = Number(decimals);
+  if (dNum === 0) {
+    return aStr;
+  }
+  const decimal = aStr.slice(-dNum);
+  const integer = aStr.slice(0, -dNum);
+  return [integer || "0", decimal].filter(Boolean).join(".");
+}
