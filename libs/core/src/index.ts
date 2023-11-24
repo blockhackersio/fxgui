@@ -1,4 +1,3 @@
-import { Precision as Num } from "@fxgui/precision";
 import {
   createEffect,
   createMemo,
@@ -6,7 +5,6 @@ import {
   createSignal,
   nextTick,
 } from "@msig/core";
-import { Err, Ok, Result } from "ts-results";
 export const None = undefined;
 export type None = undefined;
 export type Optional<T> = T | None;
@@ -42,10 +40,8 @@ export class TokenMap {
       this.add(token);
     }
   }
-  get(id: string): Result<Token, "unknown_token"> {
-    const found = this.tokens.get(id);
-    if (!found) return Err("unknown_token");
-    return Ok(found);
+  get(id: string): Optional<Token> {
+    return this.tokens.get(id);
   }
   add(token: Token) {
     this.tokens.set(token.id, token);
@@ -57,6 +53,8 @@ export class TokenMap {
     return new TokenMap(tokens);
   }
 }
+
+export type Engine = ReturnType<typeof createEngine>;
 
 export function createEngine<TRates, TBreakdown>(
   assets: TokenMap,
@@ -73,9 +71,11 @@ export function createEngine<TRates, TBreakdown>(
   const [reactiveB, setReactiveB] = createSignal(tokenBAmt());
 
   createEffect(() => {
+    console.log("a or b changed");
     const dir = direction();
     const a = tokenAAmt();
     const b = tokenBAmt();
+    console.log({ a, b, dir });
     if (dir === "forward") {
       setReactiveA(a);
     } else {
@@ -83,12 +83,20 @@ export function createEngine<TRates, TBreakdown>(
     }
   });
 
+  createEffect(() => {
+    console.log("reactiveA: " + reactiveA());
+  });
+
+  createEffect(() => {
+    console.log("reactiveB: " + reactiveB());
+  });
   const [tokenAId, setTokenAId] = createSignal<Optional<string>>(None);
   const [tokenBId, setTokenBId] = createSignal<Optional<string>>(None);
 
   const tokenPair = createMemo(() => {
     const aId = tokenAId();
     const bId = tokenBId();
+    console.log("tokenPair", { aId, bId });
     return aId && bId ? [aId, bId] : None;
   });
 
@@ -97,8 +105,8 @@ export function createEngine<TRates, TBreakdown>(
     const [aId, bId] = pair;
     const a = assets.get(aId);
     const b = assets.get(bId);
-    if (!a.ok || !b.ok) return None;
-    return await getRates(a.val, b.val);
+    if (!a || !b) return None;
+    return await getRates(a, b);
   });
 
   const combined = createMemo(() => {
@@ -116,13 +124,13 @@ export function createEngine<TRates, TBreakdown>(
     const [aId, bId] = input.tokenPair;
     const tokenA = assets.get(aId);
     const tokenB = assets.get(bId);
-    if (tokenA.err || tokenB.err) return None;
+    if (!tokenA || !tokenB) return None;
     const amount =
       input.direction === "forward" ? input.tokenAAmt : input.tokenBAmt;
     const [result, breakdown] = await calculate(
       amount,
-      tokenA.val,
-      tokenB.val,
+      tokenA,
+      tokenB,
       input.direction,
       input.rates,
     );

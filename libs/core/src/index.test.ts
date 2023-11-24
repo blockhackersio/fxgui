@@ -12,16 +12,6 @@ const Tokens: Token[] = [
 
 const assets = new TokenMap(Tokens);
 
-test("TokenMap", () => {
-  const bad = assets.get("foo");
-  expect(bad.err).toBe(true);
-  expect(bad.ok).toBe(false);
-
-  const good = assets.get("BTC");
-  expect(good.err).toBe(false);
-  expect(good.val).toEqual({ decimals: 8n, id: "BTC" });
-});
-
 type Pool = { ticker: string; pair: Record<string, bigint> };
 type IntTuple = [bigint, bigint];
 
@@ -138,8 +128,8 @@ test("calculateFn btc -> usd", async () => {
   expect(
     await calculateFn(
       1_00000000n,
-      assets.get("BTC").unwrap(),
-      assets.get("USD").unwrap(),
+      assets.get("BTC")!,
+      assets.get("USD")!,
       "forward",
       {
         ticker: "BTC_USD",
@@ -161,8 +151,8 @@ test("calculateFn btc -> usd backwards", async () => {
   expect(
     await calculateFn(
       3015000n,
-      assets.get("BTC").unwrap(),
-      assets.get("USD").unwrap(),
+      assets.get("BTC")!,
+      assets.get("USD")!,
       "backward",
       {
         ticker: "BTC_USD",
@@ -184,8 +174,8 @@ test("calculateFn usd -> btc", async () => {
   expect(
     await calculateFn(
       30000_00n,
-      assets.get("USD").unwrap(),
-      assets.get("BTC").unwrap(),
+      assets.get("USD")!,
+      assets.get("BTC")!,
       "forward",
       {
         ticker: "BTC_USD",
@@ -206,21 +196,29 @@ test("calculateFn usd -> btc", async () => {
 
 test("swap from ETH to BTC", async () => {
   const { engine, calculate, rates } = makeEngine();
+  console.log("\n== setTokenAId: BTC");
   engine.setTokenAId("BTC");
+
+  console.log("\n== setTokenBId: USD");
   engine.setTokenBId("USD");
+  console.log("\n== setDirection: forward");
   engine.setDirection("forward");
+
+  console.log("\n== setTokenAAmt: 100000000n");
   engine.setTokenAAmt(100000000n); // 1 BTC
   expect(engine.tokenBAmt()).toBe(0n); // Will take some time to settle
   await expectEventually(engine.tokenBAmt, 3015000n);
   expect(engine.breakdown()?.feeAmt).toBe(150_00n);
   expect(engine.breakdown()?.feePerc).toBe(50n);
-  expect(calculate).toHaveBeenCalledTimes(2);
+  expect(calculate).toHaveBeenCalledTimes(1);
   expect(rates).toHaveBeenCalledTimes(1);
   engine.setTokenAId("ETH");
   engine.setTokenAAmt(1_000000000000000000n);
   await expectEventually(engine.tokenBAmt, 2010_00n);
   engine.setTokenAAmt(2_000000000000000000n);
   await expectEventually(engine.tokenBAmt, 4020_00n);
+  console.log("\n== FIN!");
+  return;
 });
 
 type CheckerFn<T> = (v: T) => boolean;

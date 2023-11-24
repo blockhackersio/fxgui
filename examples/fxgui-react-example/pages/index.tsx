@@ -1,19 +1,17 @@
 import { Button, HStack, Input } from "@chakra-ui/react";
 import { Select } from "@chakra-ui/react";
 import { Flex, VStack } from "@chakra-ui/react";
-// import { useSignal } from "@msig/react";
-import { Direction, None, Token, TokenMap, createEngine } from "@fxgui/core";
+import { useSignal } from "@msig/react";
+import {
+  Direction,
+  Engine,
+  None,
+  Token,
+  TokenMap,
+  createEngine,
+} from "@fxgui/core";
 import { Precision as Num } from "@fxgui/precision";
-//
-//
-//
-// XXX: Having some issue with tslib and ts-result
-//
-//
-//
-//
-//
-//
+
 type Pool = { ticker: string; pair: Record<string, bigint> };
 type IntTuple = [bigint, bigint];
 
@@ -128,30 +126,109 @@ const assets = new TokenMap(Tokens);
 
 const engine = createEngine(assets, calculateFn, ratesFn);
 
-function TokenInput() {
+function useEngine(e: Engine) {
+  const { setDirection, setTokenAAmt, setTokenAId, setTokenBAmt, setTokenBId } =
+    e;
+
+  const tokenAAmt = useSignal(e.tokenAAmt);
+  const tokenAId = useSignal(e.tokenAId);
+  const tokenBAmt = useSignal(e.tokenBAmt);
+  const tokenBId = useSignal(e.tokenBId);
+  const breakdown = useSignal(e.breakdown);
+  return {
+    setTokenAAmt,
+    setTokenBAmt,
+    setTokenAId,
+    setTokenBId,
+    setDirection,
+    tokenAAmt,
+    tokenAId,
+    tokenBAmt,
+    tokenBId,
+    breakdown,
+  };
+}
+
+function TokenInput(props: {
+  amount: bigint;
+  tokenId?: string;
+  tokens: Token[];
+  onChange: (v: bigint) => void;
+  onSelect: (v: string) => void;
+  onFocus: () => void;
+}) {
+  const onChange = (e: { target: { value: string } }) => {
+    const { value } = e.target;
+    const valueAsInt = BigInt(value);
+    props.onChange(valueAsInt);
+  };
+  const onSelect = (e: { target: { value: string } }) => {
+    props.onSelect(e.target.value);
+  };
+
+  const onFocus = () => {
+    props.onFocus();
+  };
+  const valueAsStr = `${props.amount}`;
   return (
     <Flex>
-      <Input placeholder="0.0" />
-      <Select placeholder=" ">
-        <option value="ETH">ETH</option>
-        <option value="BTC">BTC</option>
-        <option value="USD">USD</option>
+      <Input
+        placeholder="0.0"
+        value={valueAsStr}
+        onChange={onChange}
+        onFocus={onFocus}
+      />
+      <Select placeholder=" " onChange={onSelect}>
+        {props.tokens.map((token) => {
+          return (
+            <option key={token.id} value={token.id}>
+              {token.id}
+            </option>
+          );
+        })}
       </Select>
     </Flex>
   );
 }
 
 function SwapInterface() {
-  // useSignalScope(() => {
-  //   const [count] = createSignal();
-  // });
+  const e = useEngine(engine);
+  const onTokenAChange = (a: bigint) => {
+    console.log(a);
+    e.setTokenAAmt(a);
+  };
+  const onTokenBChange = (b: bigint) => {
+    console.log(b);
+    e.setTokenBAmt(b);
+  };
+  const onTokenAFocus = () => {
+    e.setDirection("forward");
+  };
+  const onTokenBFocus = () => {
+    e.setDirection("backward");
+  };
   return (
     <VStack maxWidth="400px">
       <Flex direction="column">
-        <TokenInput />
-        <TokenInput />
+        <TokenInput
+          amount={e.tokenAAmt}
+          tokenId={e.tokenAId}
+          tokens={Tokens}
+          onChange={onTokenAChange}
+          onSelect={e.setTokenAId}
+          onFocus={onTokenAFocus}
+        />
+        <TokenInput
+          amount={e.tokenBAmt}
+          tokenId={e.tokenBId}
+          tokens={Tokens}
+          onChange={onTokenBChange}
+          onSelect={e.setTokenBId}
+          onFocus={onTokenBFocus}
+        />
       </Flex>
       <Button width="100%">Swap</Button>
+      <pre>{toString(e)}</pre>
     </VStack>
   );
 }
@@ -161,5 +238,12 @@ export default function Home() {
     <HStack width="100%">
       <SwapInterface />
     </HStack>
+  );
+}
+function toString(o: any) {
+  return JSON.stringify(
+    o,
+    (_, v) => (typeof v === "bigint" ? v.toString() : v),
+    2,
   );
 }
