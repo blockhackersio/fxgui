@@ -4,7 +4,9 @@ import {
   createResource,
   createSignal,
   nextTick,
+  untrack,
 } from "@msig/core";
+import { log } from "./utils";
 export const None = undefined;
 export type None = undefined;
 export type Optional<T> = T | None;
@@ -56,6 +58,11 @@ export class TokenMap {
 
 export type Engine<R, B> = ReturnType<typeof createEngine<R, B>>;
 
+function getDecimals(assets: TokenMap, tokenId?: string): bigint {
+  if (!tokenId) return 8n;
+  return assets.get(tokenId)?.decimals ?? 8n;
+}
+
 export function createEngine<TRates, TBreakdown>(
   assets: TokenMap,
   calculate: CalculateFn<TRates, TBreakdown>,
@@ -70,12 +77,16 @@ export function createEngine<TRates, TBreakdown>(
   const [reactiveA, setReactiveA] = createSignal(tokenAAmt());
   const [reactiveB, setReactiveB] = createSignal(tokenBAmt());
 
+  const [tokenAId, setTokenAId] = createSignal<Optional<string>>(None);
+  const [tokenBId, setTokenBId] = createSignal<Optional<string>>(None);
+
+  // make the underlying amount of tokens adjust based on assets of different decimals
   createEffect(() => {
-    console.log("a or b changed");
+    log("a or b changed");
     const dir = direction();
     const a = tokenAAmt();
     const b = tokenBAmt();
-    console.log({ a, b, dir });
+    log({ a, b, dir });
     if (dir === "forward") {
       setReactiveA(a);
     } else {
@@ -84,19 +95,17 @@ export function createEngine<TRates, TBreakdown>(
   });
 
   createEffect(() => {
-    console.log("reactiveA: " + reactiveA());
+    log("reactiveA: " + reactiveA());
   });
 
   createEffect(() => {
-    console.log("reactiveB: " + reactiveB());
+    log("reactiveB: " + reactiveB());
   });
-  const [tokenAId, setTokenAId] = createSignal<Optional<string>>(None);
-  const [tokenBId, setTokenBId] = createSignal<Optional<string>>(None);
 
   const tokenPair = createMemo(() => {
     const aId = tokenAId();
     const bId = tokenBId();
-    console.log("tokenPair", { aId, bId });
+    log("tokenPair", { aId, bId });
     return aId && bId ? [aId, bId] : None;
   });
 
@@ -176,7 +185,7 @@ export function createEngine<TRates, TBreakdown>(
   };
 }
 
-export function assetAmtStrToInt(decimals: bigint, amount: string): bigint {
+export function strToInt(decimals: bigint, amount: string): bigint {
   const dNum = Number(decimals);
   let [integerStr, decimalStr = ""] = amount.split(".");
   decimalStr = decimalStr.slice(0, dNum) ?? "";
@@ -184,7 +193,12 @@ export function assetAmtStrToInt(decimals: bigint, amount: string): bigint {
   return total;
 }
 
-export function intToAssetAmtStr(decimals: bigint, amount: bigint): string {
+export function intToStr(
+  decimals: bigint,
+  amount: bigint,
+  fixed?: bigint,
+): string {
+  const fixedNum = fixed ? Number(fixed) : None;
   const aStr = amount.toString();
   const dNum = Number(decimals);
   if (dNum === 0) {
@@ -192,7 +206,12 @@ export function intToAssetAmtStr(decimals: bigint, amount: bigint): string {
   }
   const decimal = aStr.slice(-dNum);
   const integer = aStr.slice(0, -dNum);
-  return [integer || "0", decimal.padStart(dNum, "0")]
-    .filter(Boolean)
-    .join(".");
+  const paddedDecimal = decimal.padStart(dNum, "0");
+  const fixedDecimal =
+    fixedNum === None
+      ? paddedDecimal
+      : fixedNum === -1
+      ? paddedDecimal.replace(/0+$/, "")
+      : paddedDecimal.slice(0, fixedNum).padEnd(fixedNum, "0");
+  return [integer || "0", fixedDecimal].filter(Boolean).join(".");
 }

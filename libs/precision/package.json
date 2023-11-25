@@ -19,7 +19,8 @@
   },
   "scripts": {
     "test": "vitest",
-    "build": "tsup"
+    "build": "tsup",
+    "dev": "tsup --watch"
   },
   "devDependencies": {
     "@types/bn.js": "^5.1.5",

@@ -9,8 +9,8 @@ import {
   Token,
   TokenMap,
   createEngine,
-  assetAmtStrToInt,
-  intToAssetAmtStr,
+  strToInt,
+  intToStr,
 } from "@fxgui/core";
 import { FORMATS, Precision as Num, Precision } from "@fxgui/precision";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
@@ -170,11 +170,12 @@ function BlurInput({
 
   const commitChange = () => {
     onChange(tempValue);
-    setFocus(false);
     ref.current?.blur();
+    setFocus(false);
   };
   const stageChange = (e: { target: { value: string } }) => {
-    setTempValue(e.target.value);
+    const v = e.target.value;
+    if (new RegExp("^[0-9]*[.,]?[0-9]*$").test(v)) setTempValue(v);
   };
   const onKeyDown = (e: { key: string }) => {
     if (e.key === "Enter") {
@@ -201,7 +202,7 @@ function BlurInput({
 
 function getDecimals(tokenId?: string): bigint {
   if (!tokenId) {
-    return 0n;
+    return 8n;
   }
   const token = assets.get(tokenId);
   if (!token) return 0n;
@@ -219,7 +220,7 @@ function TokenInput(props: {
   const decimals = getDecimals(props.tokenId);
   const onChange = (value: string) => {
     try {
-      const valueAsInt = assetAmtStrToInt(decimals, value);
+      const valueAsInt = strToInt(decimals, value);
       props.onChange(valueAsInt);
     } catch (err) {
       console.error(err);
@@ -228,6 +229,7 @@ function TokenInput(props: {
   };
 
   const onSelect = (e: { target: { value: string } }) => {
+    props.onFocus();
     props.onSelect(e.target.value);
   };
 
@@ -235,7 +237,7 @@ function TokenInput(props: {
     props.onFocus();
   };
 
-  const valueAsStr = intToAssetAmtStr(decimals, props.amount);
+  const valueAsStr = intToStr(decimals, props.amount, -1n);
 
   return (
     <Flex>
@@ -262,7 +264,9 @@ function formatByToken(amount?: bigint, tokenId?: string) {
   if (typeof amount === "undefined") return null;
   const token = assets.get(tokenId ?? "");
   if (!token) return null;
-  return Precision.from(amount, token.decimals).toFormat(FORMATS.PERCENT);
+  return Precision.from(amount, token.decimals).toFormat(
+    Precision.FORMAT_TOKEN,
+  );
 }
 
 function formatByPlaces(amount?: bigint, exponent?: bigint) {
@@ -317,8 +321,6 @@ function SwapInterface() {
         </div>
       )}
       <Button width="100%">Swap</Button>
-      {e.breakdown?.feeAmt.toString()}
-      {e.breakdown?.feePerc.toString()}
     </VStack>
   );
 }

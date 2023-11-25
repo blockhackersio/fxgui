@@ -5,11 +5,12 @@ import {
   Direction,
   None,
   createEngine,
-  intToAssetAmtStr,
-  assetAmtStrToInt,
+  intToStr,
+  strToInt,
 } from ".";
 import { Precision as Num } from "@fxgui/precision";
 import { nextTick } from "@msig/core";
+import { log } from "./utils";
 
 // Test Utils
 const Tokens: Token[] = [
@@ -55,7 +56,7 @@ async function calculateFn(
   dir: Direction,
   rates: Pool,
 ): Promise<[bigint, Breakdown]> {
-  // console.log("calculateFn");
+  // log("calculateFn");
   const { pair } = rates;
   const aAmount = pair[a.id];
   const bAmount = pair[b.id];
@@ -203,28 +204,33 @@ test("calculateFn usd -> btc", async () => {
 });
 
 test("convert between scales", () => {
-  expect(intToAssetAmtStr(8n, 6633n)).toBe("0.00006633");
-  expect(intToAssetAmtStr(0n, 1000n)).toBe("1000");
-  expect(assetAmtStrToInt(0n, "1000")).toBe(1000n);
-  expect(intToAssetAmtStr(2n, 10000n)).toBe("100.00");
-  expect(assetAmtStrToInt(2n, "1000")).toBe(100000n);
-  expect(assetAmtStrToInt(2n, "1000.000000000")).toBe(100000n);
-  expect(assetAmtStrToInt(2n, "1234.567890123")).toBe(123456n);
-  expect(assetAmtStrToInt(4n, "0.1234")).toBe(1234n);
-  expect(intToAssetAmtStr(4n, 1234n)).toBe("0.1234");
+  expect(intToStr(8n, 6633n)).toBe("0.00006633");
+  expect(intToStr(8n, 123456789n)).toBe("1.23456789");
+  expect(intToStr(8n, 123456789n, 4n)).toBe("1.2345");
+  expect(intToStr(4n, 12345n, 8n)).toBe("1.23450000");
+  expect(intToStr(4n, 12345n, -1n)).toBe("1.2345");
+  expect(intToStr(4n, 10000n, -1n)).toBe("1");
+  expect(intToStr(0n, 1000n)).toBe("1000");
+  expect(strToInt(0n, "1000")).toBe(1000n);
+  expect(intToStr(2n, 10000n)).toBe("100.00");
+  expect(strToInt(2n, "1000")).toBe(100000n);
+  expect(strToInt(2n, "1000.000000000")).toBe(100000n);
+  expect(strToInt(2n, "1234.567890123")).toBe(123456n);
+  expect(strToInt(4n, "0.1234")).toBe(1234n);
+  expect(intToStr(4n, 1234n)).toBe("0.1234");
 });
 
 test("swap from ETH to BTC", async () => {
   const { engine, calculate, rates } = makeEngine();
-  console.log("\n== setTokenAId: BTC");
+  log("== setTokenAId: BTC");
   engine.setTokenAId("BTC");
 
-  console.log("\n== setTokenBId: USD");
+  log("== setTokenBId: USD");
   engine.setTokenBId("USD");
-  console.log("\n== setDirection: forward");
+  log("== setDirection: forward");
   engine.setDirection("forward");
 
-  console.log("\n== setTokenAAmt: 100000000n");
+  log("== setTokenAAmt: 100000000n");
   engine.setTokenAAmt(100000000n); // 1 BTC
   expect(engine.tokenBAmt()).toBe(0n); // Will take some time to settle
   await expectEventually(engine.tokenBAmt, 3015000n);
@@ -237,9 +243,19 @@ test("swap from ETH to BTC", async () => {
   await expectEventually(engine.tokenBAmt, 2010_00n);
   engine.setTokenAAmt(2_000000000000000000n);
   await expectEventually(engine.tokenBAmt, 4020_00n);
-  console.log("\n== FIN!");
+  log("== FIN!");
   return;
 });
+// log(Object.keys(process.env).sort());
+// log(process.env.TEST);
+// test.only("changing tokenId changes decimal of amount", async () => {
+//   const { engine, calculate, rates } = makeEngine();
+//   engine.setTokenAAmt(100000000n); // 1 BTC
+//   engine.setTokenAId("BTC");
+//   await expectEventually(engine.tokenAAmt, 100000000n);
+//   engine.setTokenAId("ETH");
+//   await expectEventually(engine.tokenAAmt, 1000000000000000000n);
+// });
 
 type CheckerFn<T> = (v: T) => boolean;
 

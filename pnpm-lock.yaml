@@ -94,11 +94,11 @@ importers:
         specifier: workspace:*
         version: link:../precision
       '@msig/core':
-        specifier: ^0.0.12
-        version: 0.0.12
+        specifier: ^0.0.15
+        version: 0.0.15
       '@msig/react':
-        specifier: ^0.0.12
-        version: 0.0.12(@types/node@20.5.2)
+        specifier: ^0.0.15
+        version: 0.0.15
     devDependencies:
       config:
         specifier: workspace:*
@@ -2078,10 +2078,34 @@ packages:
     resolution: {integrity: sha512-JLL4eSxEPH5HiLhIciwZRcTvj1mrYkX4P871b9MD/K/twxUWzL3Kr2d8DrXD3ZTIncQjFe9b/lmcYAszOzO4dw==}
     dev: false
 
+  /@msig/core@0.0.15:
+    resolution: {integrity: sha512-yYmatpE4a4RB9sDAQhLrHW/ALfwYsYjxXBJFR9nAxjGyYNqi4aYDbZi7vRFV2fjT/czs7MG/suGd0IwsmsRNYg==}
+    dev: false
+
   /@msig/react@0.0.12(@types/node@20.5.2):
     resolution: {integrity: sha512-FQF6CKXgqJRo8izhFX16RrqKy2b1wttTSh+ND8t9WvDQegxAZU9PVgrjHAK8EZmm1cmTHNdG5SlHg5JbZf0QxA==}
     dependencies:
       '@msig/core': 0.0.12
+      '@types/use-sync-external-store': 0.0.6
+      '@vitejs/plugin-react': 4.2.0(vite@5.0.2)
+      react: 18.2.0
+      use-sync-external-store: 1.2.0(react@18.2.0)
+      vite: 5.0.2(@types/node@20.5.2)
+    transitivePeerDependencies:
+      - '@types/node'
+      - less
+      - lightningcss
+      - sass
+      - stylus
+      - sugarss
+      - supports-color
+      - terser
+    dev: false
+
+  /@msig/react@0.0.15:
+    resolution: {integrity: sha512-oIt86JElJb3tItEAphRrHabIHItAGxC6V4ZKTUAJAsPz+Rsx+qc0mVHytCL0lOqkBh26T0OkgkaZQlhsF4tnxA==}
+    dependencies:
+      '@msig/core': 0.0.15
       '@types/use-sync-external-store': 0.0.6
       '@vitejs/plugin-react': 4.2.0(vite@5.0.2)
       react: 18.2.0
