@@ -9,8 +9,6 @@ import {
   Token,
   TokenMap,
   createEngine,
-  strToInt,
-  intToStr,
 } from "@fxgui/core";
 import { FORMATS, Precision as Num, Precision } from "@fxgui/precision";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
@@ -29,6 +27,17 @@ function calculateForwards(input: Num, pa: Num, pb: Num, fPerc: Num) {
   };
 }
 
+export function makeAssets() {
+  // Test Utils
+  const Tokens: Token[] = [
+    { id: "BTC", decimals: 8n },
+    { id: "ETH", decimals: 18n },
+    { id: "USD", decimals: 2n },
+  ];
+
+  const assets = new TokenMap(Tokens);
+  return assets;
+}
 function calculateBackwards(total: Num, pa: Num, pb: Num, fPerc: Num) {
   const preFee = total.div(fPerc.add(Num.from(1n)));
   const fee = total.sub(preFee);
@@ -50,7 +59,6 @@ async function calculateFn(
   dir: Direction,
   rates: Pool,
 ): Promise<[bigint, Breakdown]> {
-  // console.log("calculateFn");
   const { pair } = rates;
   const aAmount = pair[a.id];
   const bAmount = pair[b.id];
@@ -130,23 +138,31 @@ const assets = new TokenMap(Tokens);
 const engine = createEngine(assets, calculateFn, ratesFn);
 
 function useEngine<R, B>(e: Engine<R, B>) {
-  const { setDirection, setTokenAAmt, setTokenAId, setTokenBAmt, setTokenBId } =
-    e;
+  const {
+    setTokenAFocus,
+    setTokenBFocus,
+    setTokenAInput,
+    setTokenAId,
+    setTokenBInput,
+    setTokenBId,
+  } = e;
 
-  const tokenAAmt = useSignal(e.tokenAAmt);
+  const tokenAInput = useSignal(e.tokenAInput);
   const tokenAId = useSignal(e.tokenAId);
-  const tokenBAmt = useSignal(e.tokenBAmt);
+  const tokenBInput = useSignal(e.tokenBInput);
   const tokenBId = useSignal(e.tokenBId);
   const breakdown = useSignal(e.breakdown);
+
   return {
-    setTokenAAmt,
-    setTokenBAmt,
+    setTokenAInput,
+    setTokenBInput,
     setTokenAId,
     setTokenBId,
-    setDirection,
-    tokenAAmt,
+    setTokenAFocus,
+    setTokenBFocus,
+    tokenAInput,
     tokenAId,
-    tokenBAmt,
+    tokenBInput,
     tokenBId,
     breakdown,
   };
@@ -169,11 +185,13 @@ function BlurInput({
   const displayValue = focussed ? tempValue : value;
 
   const commitChange = () => {
+    console.log("committing change: " + tempValue);
     onChange(tempValue);
     ref.current?.blur();
     setFocus(false);
   };
   const stageChange = (e: { target: { value: string } }) => {
+    console.log("stageChange");
     const v = e.target.value;
     if (new RegExp("^[0-9]*[.,]?[0-9]*$").test(v)) setTempValue(v);
   };
@@ -200,52 +218,26 @@ function BlurInput({
   );
 }
 
-function getDecimals(tokenId?: string): bigint {
-  if (!tokenId) {
-    return 8n;
-  }
-  const token = assets.get(tokenId);
-  if (!token) return 0n;
-  return token.decimals;
-}
-
 function TokenInput(props: {
-  amount: bigint;
+  value: string;
   tokenId?: string;
   tokens: Token[];
-  onChange: (v: bigint) => void;
+  onChange: (v: string) => void;
   onSelect: (v: string) => void;
   onFocus: () => void;
 }) {
-  const decimals = getDecimals(props.tokenId);
-  const onChange = (value: string) => {
-    try {
-      const valueAsInt = strToInt(decimals, value);
-      props.onChange(valueAsInt);
-    } catch (err) {
-      console.error(err);
-      return;
-    }
-  };
-
   const onSelect = (e: { target: { value: string } }) => {
-    props.onFocus();
+    // props.onFocus();
     props.onSelect(e.target.value);
   };
-
-  const onFocus = () => {
-    props.onFocus();
-  };
-
-  const valueAsStr = intToStr(decimals, props.amount, -1n);
-
+  // console.log({ value: props.value });
   return (
     <Flex>
-      <BlurInput
+      <Input
         placeholder="0.0"
-        value={valueAsStr}
-        onChange={onChange}
-        onFocus={onFocus}
+        value={props.value}
+        onChange={(e) => props.onChange(e.target.value)}
+        onFocus={props.onFocus}
       />
       <Select placeholder=" " onChange={onSelect}>
         {props.tokens.map((token) => {
@@ -277,38 +269,25 @@ function formatByPlaces(amount?: bigint, exponent?: bigint) {
 
 function SwapInterface() {
   const e = useEngine(engine);
-  const onTokenAChange = (a: bigint) => {
-    console.log(a);
-    e.setTokenAAmt(a);
-  };
-  const onTokenBChange = (b: bigint) => {
-    console.log(b);
-    e.setTokenBAmt(b);
-  };
-  const onTokenAFocus = () => {
-    e.setDirection("forward");
-  };
-  const onTokenBFocus = () => {
-    e.setDirection("backward");
-  };
+  // console.log(e);
   return (
     <VStack maxWidth="400px">
       <Flex direction="column">
         <TokenInput
-          amount={e.tokenAAmt}
+          value={e.tokenAInput}
           tokenId={e.tokenAId}
           tokens={Tokens}
-          onChange={onTokenAChange}
+          onChange={e.setTokenAInput}
           onSelect={e.setTokenAId}
-          onFocus={onTokenAFocus}
+          onFocus={e.setTokenAFocus}
         />
         <TokenInput
-          amount={e.tokenBAmt}
+          value={e.tokenBInput}
           tokenId={e.tokenBId}
           tokens={Tokens}
-          onChange={onTokenBChange}
+          onChange={e.setTokenBInput}
           onSelect={e.setTokenBId}
-          onFocus={onTokenBFocus}
+          onFocus={e.setTokenBFocus}
         />
       </Flex>
       {e.breakdown && (

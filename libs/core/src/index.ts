@@ -68,39 +68,41 @@ export function createEngine<TRates, TBreakdown>(
   calculate: CalculateFn<TRates, TBreakdown>,
   getRates: RatesFn<TRates>,
 ) {
-  const [tokenAAmt, setTokenAAmt] = createSignal(0n);
-  const [tokenBAmt, setTokenBAmt] = createSignal(0n);
+  const [tokenAInput, setTokenAInputVal] = createSignal("0");
+  const [tokenBInput, setTokenBInputVal] = createSignal("0");
   const [direction, setDirection] = createSignal<"forward" | "backward">(
     "forward",
   );
 
-  const [reactiveA, setReactiveA] = createSignal(tokenAAmt());
-  const [reactiveB, setReactiveB] = createSignal(tokenBAmt());
-
   const [tokenAId, setTokenAId] = createSignal<Optional<string>>(None);
   const [tokenBId, setTokenBId] = createSignal<Optional<string>>(None);
 
-  // make the underlying amount of tokens adjust based on assets of different decimals
-  createEffect(() => {
-    log("a or b changed");
+  // get the tokenDecimals
+  const tokenADecimals = createMemo(() => {
+    const id = tokenAId();
+    return getDecimals(assets, id);
+  });
+
+  const tokenBDecimals = createMemo(() => {
+    const id = tokenBId();
+    return getDecimals(assets, id);
+  });
+
+  const tokenAAmt = createMemo((last) => {
     const dir = direction();
-    const a = tokenAAmt();
-    const b = tokenBAmt();
-    log({ a, b, dir });
-    if (dir === "forward") {
-      setReactiveA(a);
-    } else {
-      setReactiveB(b);
-    }
-  });
+    const input = tokenAInput();
+    const decimals = tokenADecimals();
+    if (dir === "forward") return strToInt(decimals, input);
+    else return last;
+  }, 0n);
 
-  createEffect(() => {
-    log("reactiveA: " + reactiveA());
-  });
-
-  createEffect(() => {
-    log("reactiveB: " + reactiveB());
-  });
+  const tokenBAmt = createMemo((last) => {
+    const dir = direction();
+    const input = tokenBInput();
+    const decimals = tokenBDecimals();
+    if (dir === "backward") return strToInt(decimals, input);
+    else return last;
+  }, 0n);
 
   const tokenPair = createMemo(() => {
     const aId = tokenAId();
@@ -122,8 +124,8 @@ export function createEngine<TRates, TBreakdown>(
     return {
       tokenPair: tokenPair(),
       rates: rates(),
-      tokenAAmt: reactiveA(),
-      tokenBAmt: reactiveB(),
+      tokenAAmt: tokenAAmt(),
+      tokenBAmt: tokenBAmt(),
       direction: direction(),
     };
   });
@@ -158,28 +160,59 @@ export function createEngine<TRates, TBreakdown>(
   createEffect(() => {
     const input = calculated();
     const dir = direction();
+    const tokenADec = tokenADecimals();
+    const tokenBDec = tokenBDecimals();
     if (!input) return None;
     if (dir === "forward") {
       nextTick(() => {
-        setTokenBAmt(input.output);
+        setTokenBInputVal(intToStr(tokenBDec, input.output, -1n));
       });
     } else {
       nextTick(() => {
-        setTokenAAmt(input.output);
+        setTokenAInputVal(intToStr(tokenADec, input.output, -1n));
       });
     }
   });
 
+  createEffect(() => {
+    log(`
+  tokenADecimals:${tokenADecimals()}
+  tokenBDecimals:${tokenBDecimals()}
+  tokenAId:${tokenAId()}
+  tokenBId:${tokenBId()}
+  tokenAAmt:${tokenAAmt()}
+  tokenBAmt:${tokenBAmt()}
+  tokenAInput:${tokenAInput()}
+  tokenBInput:${tokenBInput()}
+  tokenADecimals:${tokenADecimals()}
+`);
+  });
+
+  function setTokenAFocus() {
+    console.log("setTokenAFocus");
+    setDirection("forward");
+  }
+  function setTokenBFocus() {
+    console.log("setTokenBFocus");
+    setDirection("backward");
+  }
+  function setTokenAInput(value: string) {
+    log({ setTokenAInput: value });
+    setTokenAInputVal(value);
+  }
+  function setTokenBInput(value: string) {
+    setTokenBInputVal(value);
+  }
   return {
-    direction,
-    setDirection,
-    setTokenAAmt,
     setTokenAId,
-    setTokenBAmt,
     setTokenBId,
-    tokenAAmt,
+    setTokenAInput,
+    setTokenBInput,
+    setTokenAFocus,
+    setTokenBFocus,
+    tokenAInput,
+    tokenBInput,
     tokenAId,
-    tokenBAmt,
     tokenBId,
     breakdown,
   };
