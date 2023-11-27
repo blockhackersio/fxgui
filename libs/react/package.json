@@ -1,0 +1,39 @@
+{
+  "name": "@fxgui/react",
+  "version": "0.0.6",
+  "description": "FX Gui React Adaptor",
+  "type": "module",
+  "main": "./build/modern/index.cjs",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./build/modern/index.d.ts",
+        "default": "./build/modern/index.js"
+      },
+      "require": {
+        "types": "./build/modern/index.d.ts",
+        "default": "./build/modern/index.cjs"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "test": "vitest",
+    "build": "tsup",
+    "dev": "tsup --watch"
+  },
+  "devDependencies": {
+    "config": "workspace:*",
+    "typescript": "^5.2.2",
+    "vitest": "^0.34.6"
+  },
+  "keywords": [],
+  "author": "Rudi Yardley",
+  "license": "MIT",
+  "dependencies": {
+    "@fxgui/precision": "workspace:*",
+    "@fxgui/core": "workspace:*",
+    "@msig/core": "^0.0.15",
+    "@msig/react": "^0.0.15"
+  }
+}

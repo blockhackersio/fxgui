@@ -44,6 +44,9 @@ importers:
       '@fxgui/precision':
         specifier: workspace:*
         version: link:../../libs/precision
+      '@fxgui/react':
+        specifier: workspace:*
+        version: link:../../libs/react
       '@msig/core':
         specifier: ^0.0.15
         version: 0.0.15
@@ -122,6 +125,31 @@ importers:
       '@types/bn.js':
         specifier: ^5.1.5
         version: 5.1.5
+      config:
+        specifier: workspace:*
+        version: link:../config
+      typescript:
+        specifier: ^5.2.2
+        version: 5.2.2
+      vitest:
+        specifier: ^0.34.6
+        version: 0.34.6
+
+  libs/react:
+    dependencies:
+      '@fxgui/core':
+        specifier: workspace:*
+        version: link:../core
+      '@fxgui/precision':
+        specifier: workspace:*
+        version: link:../precision
+      '@msig/core':
+        specifier: ^0.0.15
+        version: 0.0.15
+      '@msig/react':
+        specifier: ^0.0.15
+        version: 0.0.15(@types/node@20.5.2)
+    devDependencies:
       config:
         specifier: workspace:*
         version: link:../config

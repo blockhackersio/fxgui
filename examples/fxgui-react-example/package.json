@@ -14,6 +14,7 @@
     "@emotion/styled": "^11.11.0",
     "@fxgui/core": "workspace:*",
     "@fxgui/precision": "workspace:*",
+    "@fxgui/react": "workspace:*",
     "@msig/react": "^0.0.15",
     "@msig/core": "^0.0.15",
     "framer-motion": "^10.16.5",
