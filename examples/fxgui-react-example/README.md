@@ -2,7 +2,14 @@ This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next
 
 ## Getting Started
 
-First, run the development server:
+Create an .env file with your currency beacon API key:
+
+```
+# .env
+NEXT_PUBLIC_CURRENCY_BEACON_API=xxxxxxxxxxxxxxx
+```
+
+Now, run the development server:
 
 ```bash
 npm run dev
