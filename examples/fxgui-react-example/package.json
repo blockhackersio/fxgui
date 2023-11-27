@@ -15,12 +15,15 @@
     "@fxgui/core": "workspace:*",
     "@fxgui/precision": "workspace:*",
     "@fxgui/react": "workspace:*",
-    "@msig/react": "^0.0.15",
     "@msig/core": "^0.0.15",
+    "@msig/react": "^0.0.15",
     "framer-motion": "^10.16.5",
     "next": "14.0.3",
     "react": "^18",
-    "react-dom": "^18"
+    "react-currency-flags": "^0.1.2",
+    "react-dom": "^18",
+    "react-icons": "^4.12.0",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "@types/node": "^20",

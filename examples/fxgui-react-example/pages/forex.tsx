@@ -1,4 +1,4 @@
-import { getAssets, calculateFn, ratesFn } from "@/services/crypto";
+import { getAssets, calculateFn, ratesFn } from "@/services/forex";
 import { SwapButton } from "@/ui/Button/SwapButton";
 import { Layout } from "@/ui/Layout";
 import { TokenAmount } from "@/ui/TokenAmount/TokenAmount";
@@ -8,7 +8,6 @@ import { createEngine } from "@fxgui/core";
 import { useEngine } from "@fxgui/react";
 import Link from "next/link";
 import { IoIosArrowRoundBack } from "react-icons/io";
-
 const assets = getAssets();
 const engine = createEngine(assets.assets, calculateFn, ratesFn);
 
@@ -16,7 +15,7 @@ export default function Crypto() {
   const e = useEngine(engine);
   return (
     <Layout
-      title="Swap"
+      title="Send funds"
       back={
         <Link href="/">
           <HStack>
