@@ -56,14 +56,14 @@ export class TokenMap {
   }
 }
 
-export type Engine<R, B> = ReturnType<typeof createEngine<R, B>>;
+export type FxGui<R, B> = ReturnType<typeof createFxGui<R, B>>;
 
 function getDecimals(assets: TokenMap, tokenId?: string): bigint {
   if (!tokenId) return 8n;
   return assets.get(tokenId)?.decimals ?? 8n;
 }
 
-export function createEngine<TRates, TBreakdown>(
+export function createFxGui<TRates, TBreakdown>(
   assets: TokenMap,
   calculate: CalculateFn<TRates, TBreakdown>,
   getRates: RatesFn<TRates>,

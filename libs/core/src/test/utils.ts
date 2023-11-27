@@ -1,5 +1,5 @@
 import { expect, vi } from "vitest";
-import { Token, Direction, None, createEngine, TokenMap } from "../index";
+import { Token, Direction, None, createFxGui, TokenMap } from "../index";
 import { Precision as Num } from "@fxgui/precision";
 import { nextTick } from "@msig/core";
 
@@ -122,10 +122,10 @@ async function ratesFn(a: Token, b: Token): Promise<Pool> {
   };
 }
 
-export function makeEngine(assets: TokenMap) {
+export function makeFxGui(assets: TokenMap) {
   const calculate = vi.fn(calculateFn);
   const rates = vi.fn(ratesFn);
-  const engine = createEngine(assets, calculate, rates);
+  const engine = createFxGui(assets, calculate, rates);
   return { engine, calculate, rates };
 }
 

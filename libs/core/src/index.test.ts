@@ -5,7 +5,7 @@ import {
   calculateFn,
   expectEventually,
   makeAssets,
-  makeEngine,
+  makeFxGui,
   makePools,
 } from "./test/utils";
 const assets = makeAssets();
@@ -98,7 +98,7 @@ test("convert between scales", () => {
 });
 
 test("swap from BTC to USD and then change the token to ETH", async () => {
-  const { engine, calculate, rates } = makeEngine(assets);
+  const { engine, calculate, rates } = makeFxGui(assets);
   log("== setTokenAId: BTC");
   engine.setTokenAId("BTC");
 
@@ -123,7 +123,7 @@ test("swap from BTC to USD and then change the token to ETH", async () => {
 });
 
 test("swap from ETH to BTC", async () => {
-  const { engine } = makeEngine(assets);
+  const { engine } = makeFxGui(assets);
 
   log("==> setTokenAFocus");
   engine.setTokenAFocus();

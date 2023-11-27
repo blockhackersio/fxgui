@@ -109,6 +109,7 @@ export function TokenInput(props: {
   onChange: (v: string) => void;
   onSelect: (v: string) => void;
   onFocus: () => void;
+  selectPlaceholder?: ReactNode;
 }) {
   const [selectOpen, setSelectOpen] = useState(false);
 
@@ -135,7 +136,7 @@ export function TokenInput(props: {
                   <span>{props.tokenId}</span>
                 </>
               ) : (
-                <span>Select Token</span>
+                <span>{props.selectPlaceholder ?? "Select Token"}</span>
               )}
               <FiChevronDown />
             </Button>

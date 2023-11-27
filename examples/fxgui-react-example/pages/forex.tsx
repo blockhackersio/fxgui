@@ -4,16 +4,16 @@ import { Layout } from "@/ui/Layout";
 import { TokenAmount } from "@/ui/TokenAmount/TokenAmount";
 import { TokenInput } from "@/ui/TokenInput/TokenInput";
 import { HStack } from "@chakra-ui/react";
-import { createEngine } from "@fxgui/core";
-import { useEngine } from "@fxgui/react";
+import { createFxGui } from "@fxgui/core";
+import { useFxGui } from "@fxgui/react";
 import Link from "next/link";
 import { IoIosArrowRoundBack } from "react-icons/io";
 
 const assets = getAssets();
-const engine = createEngine(assets.assets, calculateFn, ratesFn);
+const engine = createFxGui(assets.assets, calculateFn, ratesFn);
 
 export default function Crypto() {
-  const e = useEngine(engine);
+  const e = useFxGui(engine);
   return (
     <Layout
       title="Send funds"
@@ -31,6 +31,7 @@ export default function Crypto() {
         label="You pay"
         value={e.tokenAInput}
         tokenId={e.tokenAId}
+        selectPlaceholder="Select Currency"
         assets={assets}
         onChange={e.setTokenAInput}
         onSelect={e.setTokenAId}
@@ -41,6 +42,7 @@ export default function Crypto() {
         label="You recieve"
         value={e.tokenBInput}
         tokenId={e.tokenBId}
+        selectPlaceholder="Select Currency"
         assets={assets}
         onChange={e.setTokenBInput}
         onSelect={e.setTokenBId}

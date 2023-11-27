@@ -1,7 +1,7 @@
-import { Engine } from "@fxgui/core";
+import { FxGui } from "@fxgui/core";
 import { useSignal } from "@msig/react";
 
-export function useEngine<R, B>(e: Engine<R, B>) {
+export function useFxGui<R, B>(e: FxGui<R, B>) {
   const {
     setTokenAFocus,
     setTokenBFocus,
