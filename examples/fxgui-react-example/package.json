@@ -17,6 +17,7 @@
     "@fxgui/react": "workspace:*",
     "@msig/core": "^0.0.15",
     "@msig/react": "^0.0.15",
+    "currency-flags": "^4.0.7",
     "framer-motion": "^10.16.5",
     "next": "14.0.3",
     "react": "^18",

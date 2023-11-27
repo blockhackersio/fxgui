@@ -1,0 +1,16 @@
+[
+  {
+    "logo": "https://cryptologos.cc/logos/bitcoin-btc-logo.png?v=029",
+    "id": "BTC",
+    "decimals": 8
+  },
+  {
+    "logo": "https://cryptologos.cc/logos/ethereum-eth-logo.png?v=029",
+    "id": "ETH",
+    "decimals": 18
+  },
+  {
+    "id": "USD",
+    "decimals": 2
+  }
+]

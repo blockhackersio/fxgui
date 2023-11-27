@@ -53,6 +53,9 @@ importers:
       '@msig/react':
         specifier: ^0.0.15
         version: 0.0.15(@types/node@20.5.2)
+      currency-flags:
+        specifier: ^4.0.7
+        version: 4.0.7
       framer-motion:
         specifier: ^10.16.5
         version: 10.16.5(react-dom@18.2.0)(react@18.2.0)
@@ -2882,6 +2885,10 @@ packages:
 
   /csstype@3.1.2:
     resolution: {integrity: sha512-I7K1Uu0MBPzaFKg4nI5Q7Vs2t+3gWWW648spaF+Rg7pI9ds18Ugn+lvg4SHczUdKlHI5LWBXyqfS8+DufyBsgQ==}
+
+  /currency-flags@4.0.7:
+    resolution: {integrity: sha512-NT5i/iKmJphJPnEkJ1HQOfnNvLkkD3oPBEymS6/qufckHqzBQ6DG70fF2hUgI9bfFbpORKnMIH5dW/ucBbqPEg==}
+    dev: false
 
   /debug@4.3.4(supports-color@5.5.0):
     resolution: {integrity: sha512-PRWFHuSU3eDtQJPvnNY7Jcket1j0t5OuOsFzPPzsekD52Zl8qUfFIPEiswXqIvHWGVHOgX+7G/vCNNhehwxfkQ==}

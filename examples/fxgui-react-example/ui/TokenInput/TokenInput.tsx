@@ -13,10 +13,14 @@ import {
   ModalCloseButton,
   Button,
   Stack,
+  Divider,
 } from "@chakra-ui/react";
 import { Token } from "@fxgui/core";
 import { ReactNode, useMemo, useState } from "react";
 import { FiChevronDown } from "react-icons/fi";
+import { TokenLogo } from "@/ui/TokenLogo";
+import { Assets } from "@/types";
+import { TokenButton } from "@/ui/TokenButton";
 
 function StyledInput(props: InputProps) {
   return <Input {...props} _placeholder={{ color: "gray.500" }} />;
@@ -26,7 +30,8 @@ type TokenDialogProps = {
   onClose: () => void;
   title: ReactNode;
   selected?: string;
-  tokens: Token[];
+  bestTokens: Token[];
+  assets: Assets;
   onSelect: (v: string) => void;
 };
 
@@ -46,8 +51,14 @@ function useSearchTokens(tokens: Token[]) {
 
 function TokenDialog(props: TokenDialogProps) {
   const { term, onSearchInputChanged, filtered } = useSearchTokens(
-    props.tokens,
+    props.assets.tokens,
   );
+
+  const onTokenClick = (tokenId: string) => {
+    onSearchInputChanged("");
+    props.onSelect(tokenId);
+  };
+
   return (
     <Modal isOpen={props.isOpen} onClose={props.onClose}>
       <ModalOverlay />
@@ -61,18 +72,26 @@ function TokenDialog(props: TokenDialogProps) {
               value={term}
               onChange={(e) => onSearchInputChanged(e.target.value)}
             />
-            {filtered.map((token) => (
-              <Button
-                justifyContent="flex-start"
-                isDisabled={token.id === props.selected}
-                onClick={() => {
-                  props.onSelect(token.id);
-                  onSearchInputChanged("");
-                }}
+            {props.bestTokens?.map((token) => (
+              <TokenButton
+                assets={props.assets}
+                token={token}
                 key={token.id}
-              >
-                {token.id}
-              </Button>
+                onClick={onTokenClick}
+                disabled={token.id === props.selected}
+              />
+            ))}
+            <br />
+            <Divider />
+            <br />
+            {filtered.map((token) => (
+              <TokenButton
+                assets={props.assets}
+                token={token}
+                disabled={token.id === props.selected}
+                onClick={onTokenClick}
+                key={token.id}
+              />
             ))}
           </Stack>
         </ModalBody>
@@ -86,7 +105,7 @@ export function TokenInput(props: {
   label: string;
   value: string;
   tokenId?: string;
-  tokens: Token[];
+  assets: Assets;
   onChange: (v: string) => void;
   onSelect: (v: string) => void;
   onFocus: () => void;
@@ -106,15 +125,26 @@ export function TokenInput(props: {
         <InputRightAddon
           px="0"
           children={
-            <Button onClick={() => setSelectOpen(true)}>
-              <span>{props.tokenId ?? "Select token"} </span>
+            <Button gap={2} onClick={() => setSelectOpen(true)}>
+              {props.tokenId ? (
+                <>
+                  <TokenLogo
+                    tokenId={props.tokenId}
+                    assets={props.assets.assets}
+                  />
+                  <span>{props.tokenId}</span>
+                </>
+              ) : (
+                <span>Select Token</span>
+              )}
               <FiChevronDown />
             </Button>
           }
         />
         <TokenDialog
           isOpen={selectOpen}
-          tokens={props.tokens}
+          assets={props.assets}
+          bestTokens={props.assets.shortlist}
           selected={props.tokenId}
           onClose={() => setSelectOpen(false)}
           onSelect={(id) => {

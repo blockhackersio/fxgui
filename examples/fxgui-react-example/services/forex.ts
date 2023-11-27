@@ -1,18 +1,21 @@
 import { Direction, Token, TokenMap } from "@fxgui/core";
-import currencies from "./currencies.json";
+import currencies from "./forex.json";
 import { Precision } from "@fxgui/precision";
+import { Assets } from "@/types";
 
-type AssetsResult = { assets: TokenMap; tokens: Token[] };
-
-export function getAssets(): AssetsResult {
+export function getAssets(): Assets {
   const tokens: Token[] = currencies.map((c) => ({
     decimals: BigInt(c.precision),
     id: c.short_code,
   }));
   const assets = new TokenMap(tokens);
+  const shortlist = tokens.filter((token) =>
+    ["AUD", "USD", "EUR", "GBP", "JPY", "CNY"].includes(token.id.toUpperCase()),
+  );
   return {
     assets,
     tokens,
+    shortlist,
   };
 }
 

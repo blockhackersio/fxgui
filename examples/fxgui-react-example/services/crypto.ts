@@ -1,6 +1,7 @@
 import { Direction, None, Token, TokenMap } from "@fxgui/core";
 import { Precision as Num } from "@fxgui/precision";
-
+import Tokens from "./crypto.json";
+import { Assets } from "@/types";
 type Pool = { ticker: string; pair: Record<string, bigint> };
 type IntTuple = [bigint, bigint];
 
@@ -80,18 +81,17 @@ export async function calculateFn(
   }
 }
 
-type AssetsResult = { assets: TokenMap; tokens: Token[] };
-
-export function getAssets(): AssetsResult {
-  const tokens: Token[] = [
-    { id: "BTC", decimals: 8n },
-    { id: "ETH", decimals: 18n },
-    { id: "USD", decimals: 2n },
-  ];
-  const assets = new TokenMap(tokens);
+export function getAssets(): Assets {
+  const tokens: Token[] = Tokens.map((t) => ({
+    ...t,
+    decimals: BigInt(t.decimals),
+  }));
+  const shortlist: Token[] = [];
+  const assets = new TokenMap(tokens as any as Token[]);
   return {
     assets,
     tokens,
+    shortlist,
   };
 }
 
