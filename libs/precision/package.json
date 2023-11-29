@@ -1,6 +1,6 @@
 {
   "name": "@fxgui/precision",
-  "version": "1.0.0",
+  "version": "0.0.7",
   "description": "",
   "module": "src/index.ts",
   "main": "./build/modern/index.js",
