@@ -79,6 +79,7 @@ type Breakdown = {
   net: bigint; // in base
   perc: bigint;
   fee: bigint;
+  rate: bigint;
 };
 
 export function calculateForwards(
@@ -134,6 +135,7 @@ export async function calculateFn(
         net: net.unscale(a.decimals),
         perc: FEE_BASIS,
         fee: fee.unscale(a.decimals),
+        rate: rate.unscale(8n),
       },
     ];
   } else {
@@ -145,6 +147,7 @@ export async function calculateFn(
         net: net.unscale(a.decimals),
         perc: FEE_BASIS,
         fee: fee.unscale(a.decimals),
+        rate: rate.unscale(8n),
       },
     ];
   }

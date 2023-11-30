@@ -90,17 +90,19 @@ export function createFxGui<TRates, TBreakdown>(
   });
 
   const tokenAAmt = createMemo((last) => {
-    const dir = direction();
+    console.log("tokenAAmt");
     const input = tokenAInput();
     const decimals = tokenADecimals();
+    const dir = untrack(() => direction());
     if (dir === "forward") return strToInt(decimals, input);
     else return last;
   }, 0n);
 
   const tokenBAmt = createMemo((last) => {
-    const dir = direction();
+    console.log("tokenBAmt");
     const input = tokenBInput();
     const decimals = tokenBDecimals();
+    const dir = untrack(() => direction());
     if (dir === "backward") return strToInt(decimals, input);
     else return last;
   }, 0n);
@@ -127,7 +129,7 @@ export function createFxGui<TRates, TBreakdown>(
       rates: rates(),
       tokenAAmt: tokenAAmt(),
       tokenBAmt: tokenBAmt(),
-      direction: direction(),
+      direction: untrack(() => direction()),
     };
   });
 
@@ -160,7 +162,7 @@ export function createFxGui<TRates, TBreakdown>(
 
   createEffect(() => {
     const input = calculated();
-    const dir = direction();
+    const dir = untrack(() => direction());
     const tokenADec = tokenADecimals();
     const tokenBDec = tokenBDecimals();
     if (!input) return None;
@@ -175,19 +177,19 @@ export function createFxGui<TRates, TBreakdown>(
     }
   });
 
-  createEffect(() => {
-    log(`
-  tokenADecimals:${tokenADecimals()}
-  tokenBDecimals:${tokenBDecimals()}
-  tokenAId:${tokenAId()}
-  tokenBId:${tokenBId()}
-  tokenAAmt:${tokenAAmt()}
-  tokenBAmt:${tokenBAmt()}
-  tokenAInput:${tokenAInput()}
-  tokenBInput:${tokenBInput()}
-  tokenADecimals:${tokenADecimals()}
-`);
-  });
+  //   createEffect(() => {
+  //     log(`
+  //   tokenADecimals:${tokenADecimals()}
+  //   tokenBDecimals:${tokenBDecimals()}
+  //   tokenAId:${tokenAId()}
+  //   tokenBId:${tokenBId()}
+  //   tokenAAmt:${tokenAAmt()}
+  //   tokenBAmt:${tokenBAmt()}
+  //   tokenAInput:${tokenAInput()}
+  //   tokenBInput:${tokenBInput()}
+  //   tokenADecimals:${tokenADecimals()}
+  // `);
+  //   });
 
   function setTokenAFocus() {
     console.log("setTokenAFocus");
