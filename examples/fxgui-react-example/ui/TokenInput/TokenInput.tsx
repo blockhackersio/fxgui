@@ -25,6 +25,7 @@ import { TokenButton } from "@/ui/TokenButton";
 function StyledInput(props: InputProps) {
   return <Input {...props} _placeholder={{ color: "gray.500" }} />;
 }
+
 type TokenDialogProps = {
   isOpen: boolean;
   onClose: () => void;
@@ -35,23 +36,44 @@ type TokenDialogProps = {
   onSelect: (v: string) => void;
 };
 
-function useSearchTokens(tokens: Token[]) {
+// Move this to fxgui
+function useSearchTokens(tokens: Token[], favorites: Token[] = []) {
   const [term, onSearchInputChanged] = useState("");
+
+  const favoritesIds = useMemo(
+    () => favorites.map((f) => f.id.toLowerCase()),
+    [favorites],
+  );
+
   const filtered = useMemo(
     () =>
-      term
-        ? tokens.filter((token) =>
-            token.id.toLowerCase().includes(term.toLowerCase()),
-          )
-        : tokens,
-    [tokens, term],
+      tokens.filter((token) => {
+        const tokenId = token.id.toLowerCase();
+        const normalizedInput = term.toLowerCase();
+        const tokenInFavorites = favoritesIds.includes(tokenId);
+        if (!term) {
+          return !tokenInFavorites;
+        }
+        const tokenHasSearchTerm =
+          tokenId.startsWith(normalizedInput) ||
+          token.name?.toLowerCase().startsWith(normalizedInput);
+        return tokenHasSearchTerm;
+      }),
+    [tokens, term, favorites, term],
   );
-  return { filtered, term, onSearchInputChanged };
+
+  return {
+    filtered,
+    favorites: term ? [] : favorites,
+    term,
+    onSearchInputChanged,
+  };
 }
 
 function TokenDialog(props: TokenDialogProps) {
-  const { term, onSearchInputChanged, filtered } = useSearchTokens(
+  const { term, onSearchInputChanged, filtered, favorites } = useSearchTokens(
     props.assets.tokens,
+    props.assets.shortlist,
   );
 
   const onTokenClick = (tokenId: string) => {
@@ -72,18 +94,22 @@ function TokenDialog(props: TokenDialogProps) {
               value={term}
               onChange={(e) => onSearchInputChanged(e.target.value)}
             />
-            {props.bestTokens?.map((token) => (
-              <TokenButton
-                assets={props.assets}
-                token={token}
-                key={token.id}
-                onClick={onTokenClick}
-                disabled={token.id === props.selected}
-              />
-            ))}
-            <br />
-            <Divider />
-            <br />
+            {favorites.length && (
+              <>
+                {favorites.map((token) => (
+                  <TokenButton
+                    assets={props.assets}
+                    token={token}
+                    key={token.id}
+                    onClick={onTokenClick}
+                    disabled={token.id === props.selected}
+                  />
+                ))}
+                <br />
+                <Divider />
+                <br />
+              </>
+            )}
             {filtered.map((token) => (
               <TokenButton
                 assets={props.assets}

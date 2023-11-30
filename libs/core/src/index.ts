@@ -14,6 +14,7 @@ export type Optional<T> = T | None;
 export type Token = {
   id: string;
   decimals: bigint;
+  name?: string;
   logo?: string;
 };
 

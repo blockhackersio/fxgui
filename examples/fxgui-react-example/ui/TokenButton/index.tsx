@@ -1,5 +1,5 @@
 import { Assets } from "@/types";
-import { Button } from "@chakra-ui/react";
+import { Button, Text } from "@chakra-ui/react";
 import { Token } from "@fxgui/core";
 import { TokenLogo } from "@/ui/TokenLogo";
 
@@ -25,6 +25,11 @@ export function TokenButton({
     >
       <TokenLogo tokenId={token.id} assets={assets.assets} />
       <span>{token.id}</span>
+      {token.name && (
+        <Text fontWeight="normal" fontSize="small">
+          {token.name}
+        </Text>
+      )}
     </Button>
   );
 }

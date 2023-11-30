@@ -373,7 +373,7 @@
   },
   {
     "id": 32,
-    "name": "Yuan Renminbi",
+    "name": "Chinese Yuan Renminbi",
     "short_code": "CNY",
     "code": "156",
     "precision": 2,
@@ -577,7 +577,7 @@
   },
   {
     "id": 49,
-    "name": "Pound Sterling",
+    "name": "UK Pound Sterling",
     "short_code": "GBP",
     "code": "826",
     "precision": 2,
@@ -829,7 +829,7 @@
   },
   {
     "id": 70,
-    "name": "Yen",
+    "name": "Japanese Yen",
     "short_code": "JPY",
     "code": "392",
     "precision": 0,

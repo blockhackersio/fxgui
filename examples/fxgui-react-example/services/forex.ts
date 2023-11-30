@@ -7,6 +7,7 @@ export function getAssets(): Assets {
   const tokens: Token[] = currencies.map((c) => ({
     decimals: BigInt(c.precision),
     id: c.short_code,
+    name: c.name,
   }));
   const assets = new TokenMap(tokens);
   const shortlist = tokens.filter((token) =>
@@ -53,19 +54,19 @@ function getFutureDate(min: number) {
 }
 const cache = new Cache<Rates>();
 
+const API_KEY = process.env.NEXT_PUBLIC_CURRENCY_BEACON_API;
+
+if (!API_KEY) console.error("Please set an API key for the currency API");
+
 export async function ratesFn(base: Token, _: Token): Promise<Rates> {
   const rates = cache.getCache(base.id);
-  if (rates) {
-    return rates;
-  }
+  if (rates) return rates;
 
   // Fetch rates
   try {
-    const apiKey = process.env.NEXT_PUBLIC_CURRENCY_BEACON_API;
-    const url = `https://api.currencybeacon.com/v1/latest?api_key=${apiKey}&base=${base.id}`;
+    const url = `https://api.currencybeacon.com/v1/latest?api_key=${API_KEY}&base=${base.id}`;
     const res = await fetch(url);
     const json: { rates: Rates } = await res.json();
-
     const newRates = json.rates;
     cache.setCache(base.id, newRates);
     return newRates;
