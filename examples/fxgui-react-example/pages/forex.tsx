@@ -3,7 +3,7 @@ import { SwapButton } from "@/ui/Button/SwapButton";
 import { Layout } from "@/ui/Layout";
 import { TokenAmount } from "@/ui/TokenAmount/TokenAmount";
 import { TokenInput } from "@/ui/TokenInput/TokenInput";
-import { HStack } from "@chakra-ui/react";
+import { Flex, HStack, Text } from "@chakra-ui/react";
 import { createFxGui } from "@fxgui/core";
 import { useFxGui } from "@fxgui/react";
 import Link from "next/link";
@@ -37,6 +37,18 @@ export default function Crypto() {
         onSelect={e.setTokenAId}
         onFocus={e.setTokenAFocus}
       />
+      {e.breakdown && e.tokenAId && (
+        <>
+          <Flex direction="row" justifyContent="space-between" px="2">
+            <TokenAmount
+              assets={assets.assets}
+              amount={e.breakdown.fee}
+              tokenId={e.tokenAId}
+            />{" "}
+            <Text>Our Fee</Text>
+          </Flex>
+        </>
+      )}
       <TokenInput
         id="tokenB"
         label="You recieve"
@@ -48,16 +60,6 @@ export default function Crypto() {
         onSelect={e.setTokenBId}
         onFocus={e.setTokenBFocus}
       />
-      {e.breakdown && e.tokenBId && (
-        <p>
-          <TokenAmount
-            assets={assets.assets}
-            amount={e.breakdown.feeAmt}
-            tokenId={e.tokenBId}
-          />{" "}
-          Conversion Fee
-        </p>
-      )}
       <SwapButton>Swap</SwapButton>
     </Layout>
   );

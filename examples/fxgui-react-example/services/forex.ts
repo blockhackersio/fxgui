@@ -76,37 +76,40 @@ export async function ratesFn(base: Token, _: Token): Promise<Rates> {
 }
 
 type Breakdown = {
-  feePerc: bigint;
-  feeAmt: bigint;
+  net: bigint; // in base
+  perc: bigint;
+  fee: bigint;
 };
 
-function calculateForwards(
-  input: Precision,
-  rate: Precision,
-  fPerc: Precision,
+export function calculateForwards(
+  base: Precision, // base
+  rate: Precision, // rate 0.0-1.0
+  perc: Precision, // fee ratio percent 0.0 - 1.0
 ) {
-  const preFee = input.mul(rate);
-  const fee = preFee.mul(fPerc);
-  const total = preFee.add(fee);
+  const fee = base.mul(perc);
+  const net = base.sub(fee);
+  const quote = net.mul(rate);
+
   return {
     fee,
-    total,
-    preFee,
+    net,
+    quote,
   };
 }
 
-function calculateBackwards(
-  total: Precision,
-  rate: Precision,
-  fPerc: Precision,
+export function calculateBackwards(
+  quote: Precision, // quote
+  rate: Precision, // 0 - 1
+  perc: Precision, // fee rate 0 - 1
 ) {
-  const preFee = total.div(fPerc.add(Precision.from(1n)));
-  const fee = total.sub(preFee);
-  const input = preFee.div(rate);
+  const one = Precision.from(1n);
+  const base = quote.div(rate.mul(one.sub(perc)));
+  const fee = base.mul(perc);
+  const net = base.sub(fee);
   return {
-    preFee,
     fee,
-    input,
+    base,
+    net,
   };
 }
 
@@ -117,32 +120,32 @@ export async function calculateFn(
   dir: Direction,
   rates: Rates,
 ): Promise<[bigint, Breakdown]> {
+  const FEE_BASIS = 50n; // this should probably be elsewhere
   const rateAsNumber = rates[b.id];
   if (typeof rateAsNumber === "undefined") throw new Error("No rate returned");
-  const feePercInt = 50n;
   const rate = Precision.fromNumber(rateAsNumber);
-  const fPerc = Precision.from(feePercInt).div(Precision.from(10000n));
+  const perc = Precision.from(FEE_BASIS).div(Precision.from(10000n));
   if (dir === "forward") {
-    const input = Precision.from(amount, a.decimals);
-    const { fee, total } = calculateForwards(input, rate, fPerc);
+    const base = Precision.from(amount, a.decimals);
+    const { fee, net, quote } = calculateForwards(base, rate, perc);
     return [
-      total.unscale(b.decimals),
+      quote.unscale(b.decimals),
       {
-        feePerc: feePercInt,
-        feeAmt: fee.unscale(b.decimals),
+        net: net.unscale(a.decimals),
+        perc: FEE_BASIS,
+        fee: fee.unscale(a.decimals),
       },
     ];
   } else {
-    const total = Precision.from(amount, b.decimals);
-    const { input, fee } = calculateBackwards(total, rate, fPerc);
+    const quote = Precision.from(amount, b.decimals);
+    const { base, net, fee } = calculateBackwards(quote, rate, perc);
     return [
-      input.unscale(a.decimals),
+      base.unscale(a.decimals),
       {
-        feePerc: feePercInt,
-        feeAmt: fee.unscale(b.decimals),
+        net: net.unscale(a.decimals),
+        perc: FEE_BASIS,
+        fee: fee.unscale(a.decimals),
       },
     ];
   }
 }
-
-console.log(process.env.CURRENCY_BEACON_API);
